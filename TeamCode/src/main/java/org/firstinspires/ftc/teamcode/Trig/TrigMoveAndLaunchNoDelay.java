@@ -80,6 +80,10 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
     static final double     DRIVE_SPEED             = 0.6;
     //static final double     FLICKER                 = 0.5;
 
+
+    public void waitForDelay() {
+    }
+
     @Override
     public void runOpMode() {
 
@@ -109,8 +113,10 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
+        waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
+
         //Drive forward 2ft
-        encoderDrive(DRIVE_SPEED,  24.5,  24.5, 5.0);
+        encoderDrive(DRIVE_SPEED,  51.5,  51.5, 5.0);
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flicker.setPower(100);
@@ -119,7 +125,7 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
 
         // load second ball:  turn sweep on, wait 5 sec, turn sweep off
         sleep(500);
-        robot.sweepMotor.setPower(50);      // This is for the second ball
+        robot.sweepMotor.setPower(.5);      // This is for the second ball
         sleep(5000);
         robot.sweepMotor.setPower(0);
 
@@ -131,8 +137,15 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
 
         // knock ball off center platform: drive forward 1/2 foot and park
         sleep(500);
-        encoderDrive(DRIVE_SPEED,  6, 6, 4.0);
-        sleep(1000);     // pause for servos to move
+        encoderDrive(1.0,  12, 12, 4.0);  //ram
+        encoderDrive(1.0, -4, -4, 4.0);  //back up
+
+        encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
+
+        encoderDrive(DRIVE_SPEED, -3, 3, 4);  //turn to move ball off center
+
+        encoderDrive(DRIVE_SPEED, 7,7,4);
+        sleep(10000);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
