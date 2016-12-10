@@ -30,12 +30,15 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.Trig;
+package org.firstinspires.ftc.teamcode.Trig.MoveAndLaunch;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -64,9 +67,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TrigBot:Move and launch (No Delay)", group="TrigBot")
-//@Disabled
-public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
+@Disabled
+public class TrigMoveAndLaunchBase extends LinearOpMode {
 
     /* Declare OpMode members. */
     HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
@@ -83,6 +85,11 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
 
     public void waitForDelay() {
     }
+
+    public void turnToBall() {
+
+    }
+
 
     @Override
     public void runOpMode() {
@@ -116,7 +123,7 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
         waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
 
         //Drive forward 2ft
-        encoderDrive(DRIVE_SPEED,  51.5,  51.5, 5.0);
+        encoderDrive(DRIVE_SPEED,  47.5,  47.5, 5.0);
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flicker.setPower(100);
@@ -142,7 +149,7 @@ public class TrigMoveAndLaunchNoDelay extends LinearOpMode {
 
         encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
 
-        encoderDrive(DRIVE_SPEED, -3, 3, 4);  //turn to move ball off center
+        turnToBall();
 
         encoderDrive(DRIVE_SPEED, 7,7,4);
         sleep(10000);

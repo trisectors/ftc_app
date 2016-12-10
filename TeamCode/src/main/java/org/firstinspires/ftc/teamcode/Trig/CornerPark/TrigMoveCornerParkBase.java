@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.Trig;
+package org.firstinspires.ftc.teamcode.Trig.CornerPark;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -67,9 +67,9 @@ import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TrigBot:Move and launch (10 sec delay)", group="TrigBot")
+//@Autonomous(name="TrigBot:Move and launch Corner Park (No Delay)", group="TrigBot")
 @Disabled
-public class TrigMoveAndLaunch10SecDelay extends LinearOpMode {
+public class TrigMoveCornerParkBase extends LinearOpMode {
 
     /* Declare OpMode members. */
     HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
@@ -79,9 +79,13 @@ public class TrigMoveAndLaunch10SecDelay extends LinearOpMode {
     static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-                                                      (WHEEL_DIAMETER_INCHES * 3.1415);
+            (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 0.6;
     //static final double     FLICKER                 = 0.5;
+
+
+    public void waitForDelay() {}
+    public void turnToCorner() {}
 
     @Override
     public void runOpMode() {
@@ -105,33 +109,48 @@ public class TrigMoveAndLaunch10SecDelay extends LinearOpMode {
 
         // Send telemetry message to indicate successful Encoder reset
         telemetry.addData("Path0",  "Starting at %7d :%7d",
-                          robot.leftMotor.getCurrentPosition(),
-                          robot.rightMotor.getCurrentPosition());
+                robot.leftMotor.getCurrentPosition(),
+                robot.rightMotor.getCurrentPosition());
         telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        sleep(10000);                                   //  10 sec. to let other robot do it's thing
-        encoderDrive(DRIVE_SPEED,  24.5,  24.5, 5.0);   //2ft
+        waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
+
+        //Drive forward 2ft
+        encoderDrive(DRIVE_SPEED,  23.5,  23.5, 5.0);
+
+        // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flicker.setPower(100);
         sleep(500);
         robot.flicker.setPower(0);
+
+        // load second ball:  turn sweep on, wait 5 sec, turn sweep off
         sleep(500);
-        robot.sweepMotor.setPower(-50);              // This is for the second ball
-        sleep(500);
+        robot.sweepMotor.setPower(.5);      // This is for the second ball
+        sleep(2500);
         robot.sweepMotor.setPower(0);
+
+        // fire second particle: wait half sec, turn flicker on, wait half second, turn flicker off
         sleep(500);
         robot.flicker.setPower(100);
         sleep(500);
         robot.flicker.setPower(0);
+
+        //
+        //
+        // turn towards the corner vortex and park on it.
         sleep(500);
-        encoderDrive(DRIVE_SPEED,  6, 6, 4.0);
-        sleep(1000);     // pause for servos to move
+        turnToCorner();  //turn
+        encoderDrive(1.0, -60.0, -60.0, 4.0);  //back up into corner
+
+        sleep(10000);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
+
 
     /*
      *  Method to perfmorm a relative move, based on encoder counts.
@@ -167,14 +186,14 @@ public class TrigMoveAndLaunch10SecDelay extends LinearOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                   (runtime.seconds() < timeoutS) &&
-                   (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+                    (runtime.seconds() < timeoutS) &&
+                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Path2",  "Running at %7d :%7d",
-                                            robot.leftMotor.getCurrentPosition(),
-                                            robot.rightMotor.getCurrentPosition());
+                        robot.leftMotor.getCurrentPosition(),
+                        robot.rightMotor.getCurrentPosition());
                 telemetry.update();
             }
 
