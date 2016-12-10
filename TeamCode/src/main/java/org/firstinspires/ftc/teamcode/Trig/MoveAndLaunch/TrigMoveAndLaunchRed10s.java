@@ -10,14 +10,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name="TrigBot:Move and launch Red 10s", group="TrigBot")
 //@Disabled
-public class TrigMoveAndLaunchRed10s extends TrigMoveAndLaunchBase {
+public class TrigMoveAndLaunchRed10s extends TrigMoveAndLaunchRed {
 
    public void waitForDelay() {
         sleep(10000);
-    }
-    public void turnToBall() {
-        //red side
-        encoderDrive(DRIVE_SPEED, -3, 3, 4);  //turn to move ball off center
     }
 
 }

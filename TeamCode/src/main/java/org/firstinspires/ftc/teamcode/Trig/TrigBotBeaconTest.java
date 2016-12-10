@@ -30,15 +30,16 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.Trig.MoveAndLaunch;
+package org.firstinspires.ftc.teamcode.Trig;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
+import org.firstinspires.ftc.teamcode.PushBotDemoBot.HardwareDemoBot;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -67,29 +68,24 @@ import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
+@Autonomous(name="TrigBot: TrigBotBeaconTest", group="Pushbot")
 @Disabled
-public class TrigMoveAndLaunchBase extends LinearOpMode {
+public  class TrigBotBeaconTest extends LinearOpMode {
 
     /* Declare OpMode members. */
-    HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
-    private ElapsedTime     runtime = new ElapsedTime();
-
-    static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
-    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-                                                      (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.6;
-    //static final double     FLICKER                 = 0.5;
+    HardwareTrig robot = new HardwareTrig();   // Use a DemoBot's hardware
+    private ElapsedTime runtime = new ElapsedTime();
+    ColorSensor colorSensor;    // Hardware Device Object
 
 
-    public void waitForDelay() {
-    }
 
-    public void turnToBall() {
-
-    }
-
+    static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
+    static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double DRIVE_SPEED = 0.6;
+    static final double TURN_SPEED = 0.5;
 
     @Override
     public void runOpMode() {
@@ -112,51 +108,102 @@ public class TrigMoveAndLaunchBase extends LinearOpMode {
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
-        telemetry.addData("Path0",  "Starting at %7d :%7d",
-                          robot.leftMotor.getCurrentPosition(),
-                          robot.rightMotor.getCurrentPosition());
+        telemetry.addData("Path0", "Starting at %7d :%7d",
+                robot.leftMotor.getCurrentPosition(),
+                robot.rightMotor.getCurrentPosition());
         telemetry.update();
 
-        // Wait for the game to start (driver presses PLAY)
+
+
+            // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
-        waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
 
-        //Drive forward 2ft
-        encoderDrive(DRIVE_SPEED,  47.5,  47.5, 5.0);
+        mainLoop();
 
-        // fire first particle: turn flicker on to 100, wait half second, turn flicker off
-        robot.flicker.setPower(100);
-        sleep(500);
-        robot.flicker.setPower(0);
-
-        // load second ball:  turn sweep on, wait 5 sec, turn sweep off
-        sleep(500);
-        robot.sweepMotor.setPower(.5);      // This is for the second ball
-        sleep(2500);
-        robot.sweepMotor.setPower(0);
-
-        // fire second particle: wait half sec, turn flicker on, wait half second, turn flicker off
-        sleep(500);
-        robot.flicker.setPower(100);
-        sleep(500);
-        robot.flicker.setPower(0);
-
-        // knock ball off center platform: drive forward 1/2 foot and park
-        sleep(500);
-        encoderDrive(1.0,  12, 12, 4.0);  //ram
-        encoderDrive(1.0, -4, -4, 4.0);  //back up
-
-        encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
-
-        turnToBall();
-
-        encoderDrive(DRIVE_SPEED, 7,7,4);
-        sleep(10000);
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
     }
+
+    public boolean mostlyRed() {
+        telemetry.addData("Red  ", colorSensor.red());
+        telemetry.addData("Blue ", colorSensor.blue());
+    return colorSensor.red() > colorSensor.blue();
+
+    }
+
+
+
+
+
+    void mainLoop() {
+        innerDrive(true);
+    }
+
+
+    public int getDirection(boolean weAreRed) {
+        int dir;
+        if (weAreRed)
+            dir = -1;
+        else
+            dir = 1;
+        return dir;
+    }
+
+    public void innerDrive(boolean weAreRed) {
+        int dir = getDirection(weAreRed);
+        double d1=12.0;
+        double d2=48.0;
+        //double d3=24.0;
+       // double d4=24.0;
+
+        encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
+        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
+        // -11.77 is a 90 Deg. turn
+        encoderDrive(DRIVE_SPEED, d2, d2, 5.0);
+        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
+        //-5.885 is a 45 Deg. turn
+        //encoderDrive(DRIVE_SPEED, d3, d3, 5.0);
+        //encoderDrive(TURN_SPEED, 11.77 * dir, -11.77 * dir, 4.0);
+
+        //encoderDrive(DRIVE_SPEED, d4, d4, 5.0);
+
+
+
+
+
+
+
+
+        driveToBeacon();
+        pushButton(weAreRed);
+
+    }
+
+
+
+
+    public void outerDrive(boolean weAreRed) {
+        int dir=getDirection(weAreRed);
+
+        double d1=10.0; //Modify these
+        double d2=30.0;
+
+
+        encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
+        encoderDrive(TURN_SPEED, 45 * dir, -45 * dir, 4.0);
+
+        encoderDrive(DRIVE_SPEED, d2, d2, 5.0);
+        encoderDrive(TURN_SPEED, 45 * dir, -45 * dir, 4.0);
+
+        driveToBeacon();
+        pushButton(weAreRed);
+    }
+
+    void driveToBeacon() {}
+
+    void pushButton(boolean weAreRed) {}
 
     /*
      *  Method to perfmorm a relative move, based on encoder counts.

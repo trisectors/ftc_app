@@ -32,9 +32,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.robot.Robot;
+
+import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 /**
  * This file provides basic Telop driving for a Pushbot robot.
@@ -51,9 +54,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Trig: Mode Teleop Tank", group="Trig")
-@Disabled
-public class TrigTriggerTeleopTank extends OpMode{
+@TeleOp(name="Trig: Teleop Tank", group="Trig")
+//@Disabled
+public class TrigTeleopTank_Iterative extends OpMode{
 
     /* Declare OpMode members. */
     HardwareTrig robot       = new HardwareTrig(); // use the class created to define a Pushbot's hardware
@@ -99,7 +102,6 @@ public class TrigTriggerTeleopTank extends OpMode{
         double right;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
-
         left = gamepad1.left_stick_y;
         right = gamepad1.right_stick_y;
         robot.leftMotor.setPower(right);
@@ -111,6 +113,9 @@ public class TrigTriggerTeleopTank extends OpMode{
         else if (gamepad1.left_bumper)
             sweepSpeed -= SWEEP_SPEED;
         robot.sweepMotor.setPower(sweepSpeed);
+
+        if (gamepad1.right_trigger>0)
+            sweepSpeed=.3;
 
         if (gamepad1.x) {
             sweepSpeed=(0.00);
@@ -126,16 +131,19 @@ public class TrigTriggerTeleopTank extends OpMode{
         }
         else {
             robot.flicker.setPower(0);
+
+            if (gamepad1.dpad_right) {
+                robot.button.setPosition(0.15);
+            }
+            if (gamepad1.dpad_left)
+                robot.button.setPosition(.85);
+
+            if (gamepad1.dpad_up) {
+                robot.button.setPosition(.5);
+                telemetry.addData("servo:", "center");
+            }
+
         }
-
-        if (gamepad1.left_trigger>0) {
-            left = -gamepad1.left_stick_y;
-            right = -gamepad1.right_stick_y;
-        }
-        robot.leftMotor.setPower(left);
-        robot.rightMotor.setPower(right);
-
-
         // Use gamepad buttons to move the arm up (Y) and down (A)
    //     if (gamepad1.y)
    //         robot.armMotor.setPower(robot.ARM_UP_POWER);
@@ -145,7 +153,7 @@ public class TrigTriggerTeleopTank extends OpMode{
    //         robot.armMotor.setPower(0.0);
 
         // Send telemetry message to signify robot running;
-        telemetry.addData("claw",  "Offset = %.2f", sweepSpeed);
+        telemetry.addData("sweepSpeed",  "Offset = %.2f", sweepSpeed);
         telemetry.addData("left",  "%.2f", left);
         telemetry.addData("right", "%.2f", right);
         ;
