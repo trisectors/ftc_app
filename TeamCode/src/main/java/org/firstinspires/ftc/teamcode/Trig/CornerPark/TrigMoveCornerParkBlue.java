@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 public class TrigMoveCornerParkBlue extends TrigMoveCornerParkBase {
 
     public void  turnToCorner() {
-        encoderDrive(DRIVE_SPEED,  -14, 14, 4.0);
+        encoderDrive(DRIVE_SPEED * .5,  -16, 16  , 4.0);
     }
 
 }

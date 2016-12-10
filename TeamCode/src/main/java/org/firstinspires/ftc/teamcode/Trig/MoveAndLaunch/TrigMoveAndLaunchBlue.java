@@ -16,7 +16,7 @@ public class TrigMoveAndLaunchBlue extends TrigMoveAndLaunchBase {
     }
     public void turnToBall() {
         //blue side
-        encoderDrive(DRIVE_SPEED, 3, -3, 4);  //turn to move ball off center
+        encoderDrive(DRIVE_SPEED * .5, 3, -3, 4);  //turn to move ball off center
     }
 
 }
