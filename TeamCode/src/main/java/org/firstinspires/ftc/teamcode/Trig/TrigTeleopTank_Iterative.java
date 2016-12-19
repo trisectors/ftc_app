@@ -34,10 +34,6 @@ package org.firstinspires.ftc.teamcode.Trig;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.robot.Robot;
-
-import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 /**
  * This file provides basic Telop driving for a Pushbot robot.
@@ -105,58 +101,60 @@ public class TrigTeleopTank_Iterative extends OpMode{
 
         left = gamepad1.left_stick_y;
         right = gamepad1.right_stick_y;
-        robot.leftMotor.setPower(right * DRIVE_SPEED);
-        robot.rightMotor.setPower(left * DRIVE_SPEED);
+        robot.leftMotor.setPower(right * DRIVE_SPEED);  // should this be right * DRIVE_SPEED?
+        robot.rightMotor.setPower(left * DRIVE_SPEED);  // should this be left * DRIVE_SPEED?
+        // I think this is where we need to modify the inversion of the driving (as the sweep should be the front not the flicker)
 
         // Use gamepad left & right Bumpers to open and close the claw
         if (gamepad1.right_bumper)
             sweepSpeed += SWEEP_SPEED;
         else if (gamepad1.left_bumper)
             sweepSpeed -= SWEEP_SPEED;
-        robot.sweepMotor.setPower(sweepSpeed);
+            robot.sweepMotor.setPower(sweepSpeed);
 
-        if (gamepad1.right_trigger > 0)
+        if (gamepad1.right_trigger > 0) {
             sweepSpeed = .3;
-
+            robot.arm1.setPower(.5);  // we are going to want to modify this later to find the correct speed.
+            robot.arm2.setPower(.5);  // we are going to want to modify this later to find the correct speed.
+        }
         if (gamepad1.x) {
             sweepSpeed = (0.00);
+            robot.arm1.setPower(0);
+            robot.arm2.setPower(0);
         }
-
         if (gamepad1.a) {
             robot.flicker.setPower(10);
-        } else if (gamepad1.y) {
-            robot.flicker.setPower(-.08);
-        } else {
-            robot.flicker.setPower(0);
-
-            if (gamepad1.dpad_right) {
-                robot.button.setPosition(0.15);
-            }
-            if (gamepad1.dpad_left)
-                robot.button.setPosition(.85);
-
-            if (gamepad1.dpad_up) {
-                robot.button.setPosition(.5);
-                telemetry.addData("servo:", "center");
-            }
-
-            if (gamepad1.left_trigger > 0) {
-                robot.arm1.setPower(1);
-                robot.arm2.setPower(1);
-            }
-            else{
-                robot.arm1.setPower(0);
-                robot.arm2.setPower(0);
-            }
-
         }
-        // Use gamepad buttons to move the arm up (Y) and down (A)
-        //     if (gamepad1.y)
-        //         robot.armMotor.setPower(robot.ARM_UP_POWER);
-        //     else if (gamepad1.a)
-        //         robot.armMotor.setPower(robot.ARM_DOWN_POWER);
-        //     else
-        //         robot.armMotor.setPower(0.0);
+        else if (gamepad1.y) {
+            robot.flicker.setPower(-.08);
+        }
+        else {
+            robot.flicker.setPower(0);
+        }
+
+        if (gamepad1.dpad_right) {
+            robot.frontBeacon.setPosition(.15);
+        }
+        if (gamepad1.dpad_left) {
+            robot.frontBeacon.setPosition(.85);
+        }
+        if (gamepad1.dpad_up) {
+            robot.frontBeacon.setPosition(.5);
+            robot.sideBeacon.setPosition(0);
+            telemetry.addData("servo:", "center");
+            }
+        if (gamepad1.dpad_down) {
+            robot.sideBeacon.setPosition(.5);  // this is a guess modify as needed.
+            }
+        else {
+            robot.sideBeacon.setPosition(0);  // this is a guess modify as needed.
+        }
+        if (gamepad1.left_trigger>0)  {
+            robot.gate.setPosition(.5); // this is a guess modify as needed.
+            }
+        if (gamepad1.back) {
+            robot.gate.setPosition(0); // this is a guess modify as needed.
+            }
 
         // Send telemetry message to signify robot running;
         telemetry.addData("sweepSpeed", "Offset = %.2f", sweepSpeed);
