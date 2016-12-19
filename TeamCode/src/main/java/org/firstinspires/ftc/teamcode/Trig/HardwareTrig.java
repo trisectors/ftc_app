@@ -29,9 +29,11 @@ public class HardwareTrig
     public DcMotor  rightMotor  = null;
     public DcMotor  sweepMotor  = null;
     public DcMotor  flicker     = null;
-    public Servo    button      = null;
+    public Servo    frontBeacon = null;
     public DcMotor  arm1        = null;
     public DcMotor  arm2        = null;
+    public Servo    sideBeacon  = null;
+    public Servo    gate        = null;
 
     public static final double MID_SERVO       =  0.5 ;
     public static final double ARM_UP_POWER    =  0.45 ;
@@ -58,9 +60,12 @@ public class HardwareTrig
         rightMotor  = hwMap.dcMotor.get("right_drive");
         sweepMotor  = hwMap.dcMotor.get("sweep");
         flicker     = hwMap.dcMotor.get("flicker");
-        button      =hwMap.servo.get("button");
-        arm1        =hwMap.dcMotor.get("arm1");
-        arm2        =hwMap.dcMotor.get("arm2");
+        frontBeacon = hwMap.servo.get("frontBeacon");
+        arm1        = hwMap.dcMotor.get("arm1");
+        arm2        = hwMap.dcMotor.get("arm2");
+        sideBeacon  = hwMap.servo.get("sideBeacon");
+        gate        = hwMap.servo.get("gate");
+
         leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
         sweepMotor.setDirection(DcMotorSimple.Direction.REVERSE);

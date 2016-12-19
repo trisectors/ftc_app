@@ -120,7 +120,7 @@ public class TrigTeleopTank_Iterative extends OpMode{
 
         if (gamepad1.x) {
             sweepSpeed = (0.00);
-            }
+        }
 
         if (gamepad1.a) {
             robot.flicker.setPower(10);
@@ -129,23 +129,10 @@ public class TrigTeleopTank_Iterative extends OpMode{
         } else {
             robot.flicker.setPower(0);
 
-
-            if (gamepad1.dpad_right && robot.button.getPosition()<= .15) {
-                double pos = robot.button.getPosition();
-                pos -=.05;
-                robot.button.setPosition(pos);
-
-            } else if (gamepad1.dpad_right) {
+            if (gamepad1.dpad_right) {
                 robot.button.setPosition(0.15);
             }
-
-
-            if (gamepad1.dpad_left && robot.button.getPosition()>= .85){
-                double pos = robot.button.getPosition();
-                pos +=.05;
-                robot.button.setPosition(pos);
-
-            } else if (gamepad1.dpad_left)
+            if (gamepad1.dpad_left)
                 robot.button.setPosition(.85);
 
             if (gamepad1.dpad_up) {
@@ -153,9 +140,9 @@ public class TrigTeleopTank_Iterative extends OpMode{
                 telemetry.addData("servo:", "center");
             }
 
-            if (gamepad1.right_trigger > 0) {
-                robot.arm1.setPower(.5);
-                robot.arm2.setPower(.5);
+            if (gamepad1.left_trigger > 0) {
+                robot.arm1.setPower(1);
+                robot.arm2.setPower(1);
             }
             else{
                 robot.arm1.setPower(0);
@@ -163,6 +150,13 @@ public class TrigTeleopTank_Iterative extends OpMode{
             }
 
         }
+        // Use gamepad buttons to move the arm up (Y) and down (A)
+        //     if (gamepad1.y)
+        //         robot.armMotor.setPower(robot.ARM_UP_POWER);
+        //     else if (gamepad1.a)
+        //         robot.armMotor.setPower(robot.ARM_DOWN_POWER);
+        //     else
+        //         robot.armMotor.setPower(0.0);
 
         // Send telemetry message to signify robot running;
         telemetry.addData("sweepSpeed", "Offset = %.2f", sweepSpeed);

@@ -25,6 +25,8 @@ public class HardwarePushbot
 {
     /* Public OpMode members. */
     public DcMotor  leftMotor   = null;
+
+
     public DcMotor  rightMotor  = null;
     public DcMotor  armMotor    = null;
     public Servo    leftClaw    = null;
@@ -40,6 +42,7 @@ public class HardwarePushbot
 
     /* Constructor */
     public HardwarePushbot(){
+
 
     }
 
