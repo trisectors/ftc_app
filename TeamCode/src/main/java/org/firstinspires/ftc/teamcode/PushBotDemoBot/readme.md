@@ -69,7 +69,7 @@ Each OpMode sample class begins with several lines of code like the ones shown b
  @Disabled
 ```
 
-The name that will appear on the driver station's "opmode list" is defined by the code:
+The name that will appear on the driver station's "opmode list"  is defined by the code:
  ``name="Template: Linear OpMode"``
 You can change what appears between the quotes to better describe your opmode.
 The "group=" portion of the code can be used to help organize your list of OpModes.
