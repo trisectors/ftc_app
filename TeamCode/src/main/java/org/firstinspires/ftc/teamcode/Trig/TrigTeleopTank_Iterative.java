@@ -60,11 +60,11 @@ public class TrigTeleopTank_Iterative extends OpMode{
 
     /* Declare OpMode members. */
     HardwareTrig robot       = new HardwareTrig(); // use the class created to define a Pushbot's hardware
-                                                         // could also use HardwarePushbotMatrix class.
+    // could also use HardwarePushbotMatrix class.
     double          sweepSpeed  = 0.0 ;                  // Servo mid position
     final double SWEEP_SPEED = 0.001 ;                 // sets rate to move servo
 
-
+    double          DRIVE_SPEED= .8;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -102,10 +102,11 @@ public class TrigTeleopTank_Iterative extends OpMode{
         double right;
 
         // Run wheels in tank mode (note: The joystick goes negative when pushed forwards, so negate it)
+
         left = gamepad1.left_stick_y;
         right = gamepad1.right_stick_y;
-        robot.leftMotor.setPower(right);
-        robot.rightMotor.setPower(left);
+        robot.leftMotor.setPower(right * DRIVE_SPEED);
+        robot.rightMotor.setPower(left * DRIVE_SPEED);
 
         // Use gamepad left & right Bumpers to open and close the claw
         if (gamepad1.right_bumper)
@@ -114,22 +115,18 @@ public class TrigTeleopTank_Iterative extends OpMode{
             sweepSpeed -= SWEEP_SPEED;
         robot.sweepMotor.setPower(sweepSpeed);
 
-        if (gamepad1.right_trigger>0)
-            sweepSpeed=.3;
+        if (gamepad1.right_trigger > 0)
+            sweepSpeed = .3;
 
         if (gamepad1.x) {
-            sweepSpeed=(0.00);
+            sweepSpeed = (0.00);
         }
 
-        if (gamepad1.a)
-        {
+        if (gamepad1.a) {
             robot.flicker.setPower(10);
-        }
-        else if (gamepad1.y)
-        {
-            robot.flicker.setPower(-.05);
-        }
-        else {
+        } else if (gamepad1.y) {
+            robot.flicker.setPower(-.08);
+        } else {
             robot.flicker.setPower(0);
 
             if (gamepad1.dpad_right) {
@@ -143,22 +140,30 @@ public class TrigTeleopTank_Iterative extends OpMode{
                 telemetry.addData("servo:", "center");
             }
 
+            if (gamepad1.left_trigger > 0) {
+                robot.arm1.setPower(1);
+                robot.arm2.setPower(1);
+            }
+            else{
+                robot.arm1.setPower(0);
+                robot.arm2.setPower(0);
+            }
+
         }
         // Use gamepad buttons to move the arm up (Y) and down (A)
-   //     if (gamepad1.y)
-   //         robot.armMotor.setPower(robot.ARM_UP_POWER);
-   //     else if (gamepad1.a)
-   //         robot.armMotor.setPower(robot.ARM_DOWN_POWER);
-   //     else
-   //         robot.armMotor.setPower(0.0);
+        //     if (gamepad1.y)
+        //         robot.armMotor.setPower(robot.ARM_UP_POWER);
+        //     else if (gamepad1.a)
+        //         robot.armMotor.setPower(robot.ARM_DOWN_POWER);
+        //     else
+        //         robot.armMotor.setPower(0.0);
 
         // Send telemetry message to signify robot running;
-        telemetry.addData("sweepSpeed",  "Offset = %.2f", sweepSpeed);
-        telemetry.addData("left",  "%.2f", left);
+        telemetry.addData("sweepSpeed", "Offset = %.2f", sweepSpeed);
+        telemetry.addData("left", "%.2f", left);
         telemetry.addData("right", "%.2f", right);
         ;
     }
-
     /*
      * Code to run ONCE after the driver hits STOP
      */

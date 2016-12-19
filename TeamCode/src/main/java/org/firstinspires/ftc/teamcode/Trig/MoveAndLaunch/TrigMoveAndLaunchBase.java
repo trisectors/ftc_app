@@ -75,11 +75,11 @@ public class TrigMoveAndLaunchBase extends LinearOpMode {
     private ElapsedTime     runtime = new ElapsedTime();
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
+    static final double     DRIVE_GEAR_REDUCTION    = 1 ;     // This is < 1.0 if geared UP
     static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.6;
+    static final double     DRIVE_SPEED             = .6;
     //static final double     FLICKER                 = 0.5;
 
 
@@ -123,7 +123,7 @@ public class TrigMoveAndLaunchBase extends LinearOpMode {
         waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
 
         //Drive forward 2ft
-        encoderDrive(DRIVE_SPEED,  47.5,  47.5, 5.0);
+        encoderDrive(DRIVE_SPEED,  48.5,  48.5, 5.0);
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flicker.setPower(100);

@@ -128,6 +128,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
+
         /**
          * Load the data sets that for the trackable objects we wish to track. These particular data
          * sets are stored in the 'assets' part of our application (you'll see them in the Android
@@ -137,7 +138,6 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          * documentation directory.
          */
         VuforiaTrackables FTC_2016 = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
-
 
         VuforiaTrackable gears = FTC_2016.get(3);
         gears.setName("Gears");

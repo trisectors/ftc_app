@@ -27,10 +27,11 @@ public class HardwareTrig
 {    /* Public OpMode members. */
     public DcMotor  leftMotor   = null;
     public DcMotor  rightMotor  = null;
-    public DcMotor  sweepMotor = null;
-    public DcMotor  flicker  = null;
-    public Servo    button  = null;
-//    public Servo    rightClaw   = null;
+    public DcMotor  sweepMotor  = null;
+    public DcMotor  flicker     = null;
+    public Servo    button      = null;
+    public DcMotor  arm1        = null;
+    public DcMotor  arm2        = null;
 
     public static final double MID_SERVO       =  0.5 ;
     public static final double ARM_UP_POWER    =  0.45 ;
@@ -58,22 +59,31 @@ public class HardwareTrig
         sweepMotor  = hwMap.dcMotor.get("sweep");
         flicker     = hwMap.dcMotor.get("flicker");
         button      =hwMap.servo.get("button");
+        arm1        =hwMap.dcMotor.get("arm1");
+        arm2        =hwMap.dcMotor.get("arm2");
         leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
         sweepMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         flicker.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm1.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
         // Set all motors to zero power
         leftMotor.setPower(0);
         rightMotor.setPower(0);
-       sweepMotor.setPower(0);
+        sweepMotor.setPower(0);
         flicker.setPower(0);
+        arm1.setPower(0);
+        arm2.setPower(0);
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         sweepMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flicker.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        arm2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // Define and initialize ALL installed servos.
 //        leftClaw = hwMap.servo.get("left_hand");
 //        rightClaw = hwMap.servo.get("right_hand");
