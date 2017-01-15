@@ -1,7 +1,12 @@
 package org.firstinspires.ftc.teamcode.Trig;
 
+import android.hardware.Sensor;
+
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -29,14 +34,13 @@ public class HardwareTrig
     public DcMotor  rightMotor  = null;
     public DcMotor  sweepMotor  = null;
     public DcMotor  flicker     = null;
-    public Servo    frontBeacon = null;
-    public DcMotor  arm1        = null;
-    public DcMotor  arm2        = null;
-    public Servo    sideBeacon  = null;
+    public Servo    beaconLeft  = null;
+    public Servo    beaconRight = null;
     public Servo    gate        = null;
-
+    public ModernRoboticsI2cGyro gyro        = null;
+    public ColorSensor colorSensor = null;
     public static final double MID_SERVO       =  0.5 ;
-    public static final double ARM_UP_POWER    =  0.45 ;
+    public static final double ARM_UP_POWkER    =  0.45 ;
     public static final double ARM_DOWN_POWER  = -0.45 ;
     public static final double TURN_SPEED      = .5;
 
@@ -60,35 +64,31 @@ public class HardwareTrig
         rightMotor  = hwMap.dcMotor.get("right_drive");
         sweepMotor  = hwMap.dcMotor.get("sweep");
         flicker     = hwMap.dcMotor.get("flicker");
-        frontBeacon = hwMap.servo.get("frontBeacon");
-        arm1        = hwMap.dcMotor.get("arm1");
-        arm2        = hwMap.dcMotor.get("arm2");
-        sideBeacon  = hwMap.servo.get("sideBeacon");
+        beaconLeft  = hwMap.servo.get("beaconLeft");
+        beaconRight = hwMap.servo.get("beaconRight");
         gate        = hwMap.servo.get("gate");
-
-        leftMotor.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
-        rightMotor.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+        gyro        = (ModernRoboticsI2cGyro) hwMap.gyroSensor.get("gyro");
+        colorSensor =  hwMap.colorSensor.get("sensor_color");
+        colorSensor.enableLed(false);
+        leftMotor.setDirection(DcMotor.Direction.REVERSE);
+        rightMotor.setDirection(DcMotor.Direction.FORWARD);
         sweepMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        flicker.setDirection(DcMotorSimple.Direction.FORWARD);
-        arm1.setDirection(DcMotorSimple.Direction.FORWARD);
-        arm2.setDirection(DcMotorSimple.Direction.REVERSE);
+        flicker.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
-        // Set all motors to zero power
+        // Set all motors and servos to either zero power or a position
         leftMotor.setPower(0);
         rightMotor.setPower(0);
         sweepMotor.setPower(0);
         flicker.setPower(0);
-        arm1.setPower(0);
-        arm2.setPower(0);
+        gate.setPosition(0);
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         sweepMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flicker.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        arm1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        arm2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         // Define and initialize ALL installed servos.
 //        leftClaw = hwMap.servo.get("left_hand");
 //        rightClaw = hwMap.servo.get("right_hand");

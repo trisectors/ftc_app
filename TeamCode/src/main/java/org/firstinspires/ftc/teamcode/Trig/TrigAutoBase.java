@@ -32,14 +32,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.PushBotDemoBot.HardwareDemoBot;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -68,28 +64,38 @@ import org.firstinspires.ftc.teamcode.PushBotDemoBot.HardwareDemoBot;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TrigBot: TrigBotBeaconTest", group="Pushbot")
-@Disabled
-public  class TrigBotBeaconTest extends LinearOpMode {
+
+public class TrigAutoBase extends LinearOpMode {
 
     /* Declare OpMode members. */
-    HardwareTrig robot = new HardwareTrig();   // Use a DemoBot's hardware
-    private ElapsedTime runtime = new ElapsedTime();
-    ColorSensor colorSensor;    // Hardware Device Object
+    public HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
+    public ElapsedTime     runtime = new ElapsedTime();
 
-
-
-    static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
-    static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
-    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
-    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    public static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
+    public static final double     DRIVE_GEAR_REDUCTION    = 1 ;     // This is < 1.0 if geared UP
+    public static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
+    public static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double DRIVE_SPEED = 0.6;
-    static final double TURN_SPEED = 0.5;
+    public static final double     DRIVE_SPEED             = .4;
+    public static final double TURN_SPEED      = .5;
+    public final double LEFT_BEACON_DOWN = 1.0;
+    public final double LEFT_BEACON_UP = 0.0;
+    public final double LEFT_BEACON_PARTIAL_DOWN = 0.2;
+    public final double RIGHT_BEACON_UP = 1.0;
+    public final double RIGHT_BEACON_DOWN = 0.0;
+    public final double RIGHT_BEACON_PARTIAL_DOWN = 0.8;
+    public double GATE_DOWN_POSITION = .7;
+    public double GATE_UP_POSITION = 0;
+    public double sweepSpeed = 0.0;
+    //static final double     FLICKER                 = 0.5;
+
+
+    public void waitForDelay() {}
+    public void turnToCorner() {}
+    public void doOpMode() {}
 
     @Override
     public void runOpMode() {
-
         /*
          * Initialize the drive system variables.
          * The init() method of the hardware class does all the work here
@@ -97,7 +103,7 @@ public  class TrigBotBeaconTest extends LinearOpMode {
         robot.init(hardwareMap);
 
         // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders");    //
+        telemetry.addData("Status", "Resetting Encoders", "DON'T PICK UP CONTROLLER");    //
         telemetry.update();
 
         robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -108,102 +114,57 @@ public  class TrigBotBeaconTest extends LinearOpMode {
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
-        telemetry.addData("Path0", "Starting at %7d :%7d",
+        telemetry.addData("Path0",  "Starting at %7d :%7d",
                 robot.leftMotor.getCurrentPosition(),
                 robot.rightMotor.getCurrentPosition());
         telemetry.update();
 
+            robot.beaconLeft.setPosition(LEFT_BEACON_DOWN);
+            robot.beaconRight.setPosition(RIGHT_BEACON_DOWN);
+        // Wait for the game to start (driver presses PLAY)
+
+        robot.gyro.calibrate();
+
+        // make sure the gyro is calibrated before continuing
+        while (!isStopRequested() && robot.gyro.isCalibrating())  {
+            sleep(50);
+            idle();
+        }
+
+        doOpMode();
+
+    }
 
 
-            // Wait for the game to start (driver presses PLAY)
-        waitForStart();
+    public void simpleGyroTurn( double speed, double angle) {
 
+        robot.gyro.resetZAxisIntegrator();
 
-        mainLoop();
-
-
-        telemetry.addData("Path", "Complete");
+        telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
         telemetry.update();
+
+        if (angle > 0) {
+            robot.leftMotor.setPower(TURN_SPEED);
+            robot.rightMotor.setPower(-1.0 * TURN_SPEED);
+
+
+
+            while (opModeIsActive() && robot.gyro.getIntegratedZValue() < angle) {
+                // Update telemetry & Allow time for other processes to run.
+                telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
+                telemetry.update();
+            }
+
+        } else {
+            robot.rightMotor.setPower(TURN_SPEED);
+            robot.leftMotor.setPower(-1.0 * TURN_SPEED);
+            while (opModeIsActive() && robot.gyro.getIntegratedZValue() > angle) {
+                // Update telemetry & Allow time for other processes to run.
+                telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
+                telemetry.update();
+            }
+        }
     }
-
-    public boolean mostlyRed() {
-        telemetry.addData("Red  ", colorSensor.red());
-        telemetry.addData("Blue ", colorSensor.blue());
-    return colorSensor.red() > colorSensor.blue();
-
-    }
-
-
-
-
-
-    void mainLoop() {
-        innerDrive(true);
-    }
-
-
-    public int getDirection(boolean weAreRed) {
-        int dir;
-        if (weAreRed)
-            dir = -1;
-        else
-            dir = 1;
-        return dir;
-    }
-
-    public void innerDrive(boolean weAreRed) {
-        int dir = getDirection(weAreRed);
-        double d1=12.0;
-        double d2=48.0;
-        //double d3=24.0;
-       // double d4=24.0;
-
-        encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
-        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
-        // -11.77 is a 90 Deg. turn
-        encoderDrive(DRIVE_SPEED, d2, d2, 5.0);
-        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
-        //-5.885 is a 45 Deg. turn
-        //encoderDrive(DRIVE_SPEED, d3, d3, 5.0);
-        //encoderDrive(TURN_SPEED, 11.77 * dir, -11.77 * dir, 4.0);
-
-        //encoderDrive(DRIVE_SPEED, d4, d4, 5.0);
-
-
-
-
-
-
-
-
-        driveToBeacon();
-        pushButton(weAreRed);
-
-    }
-
-
-
-
-    public void outerDrive(boolean weAreRed) {
-        int dir=getDirection(weAreRed);
-
-        double d1=10.0; //Modify these
-        double d2=30.0;
-
-
-        encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
-        encoderDrive(TURN_SPEED, 45 * dir, -45 * dir, 4.0);
-
-        encoderDrive(DRIVE_SPEED, d2, d2, 5.0);
-        encoderDrive(TURN_SPEED, 45 * dir, -45 * dir, 4.0);
-
-        driveToBeacon();
-        pushButton(weAreRed);
-    }
-
-    void driveToBeacon() {}
-
-    void pushButton(boolean weAreRed) {}
 
     /*
      *  Method to perfmorm a relative move, based on encoder counts.
@@ -239,14 +200,14 @@ public  class TrigBotBeaconTest extends LinearOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                   (runtime.seconds() < timeoutS) &&
-                   (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+                    (runtime.seconds() < timeoutS) &&
+                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
                 telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
                 telemetry.addData("Path2",  "Running at %7d :%7d",
-                                            robot.leftMotor.getCurrentPosition(),
-                                            robot.rightMotor.getCurrentPosition());
+                        robot.leftMotor.getCurrentPosition(),
+                        robot.rightMotor.getCurrentPosition());
                 telemetry.update();
             }
 
@@ -259,6 +220,42 @@ public  class TrigBotBeaconTest extends LinearOpMode {
             robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             //  sleep(250);   // optional pause after each move
+
         }
+    }
+
+    public void pressBeacon(boolean redTeam) {
+
+        if (robot.colorSensor.red() > robot.colorSensor.blue()) {
+            if (redTeam) {
+                robot.beaconLeft.setPosition(LEFT_BEACON_UP);
+                sleep(250);
+                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                robot.beaconLeft.setPosition(LEFT_BEACON_PARTIAL_DOWN);
+            } else {
+                robot.beaconRight.setPosition(RIGHT_BEACON_UP);
+                sleep(250);
+                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                robot.beaconRight.setPosition(RIGHT_BEACON_PARTIAL_DOWN);
+            }
+        } else {
+            if (!redTeam) {
+                robot.beaconLeft.setPosition(LEFT_BEACON_UP);
+                sleep(250);
+                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                robot.beaconLeft.setPosition(LEFT_BEACON_PARTIAL_DOWN);
+            } else {
+                robot.beaconRight.setPosition(RIGHT_BEACON_UP);
+                sleep(250);
+                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                robot.beaconRight.setPosition(RIGHT_BEACON_PARTIAL_DOWN);
+            }
+
+
+        }
+
+        telemetry.addData("Red  ", robot.colorSensor.red());
+        telemetry.addData("blue  ", robot.colorSensor.blue());
+        telemetry.update();
     }
 }

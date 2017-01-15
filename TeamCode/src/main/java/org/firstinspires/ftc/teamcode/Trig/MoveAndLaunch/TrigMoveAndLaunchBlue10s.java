@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 
 
-@Autonomous(name="TrigBot:Move and launch Blue 10s", group="TrigBot")
+@Autonomous(name="TrigBot:Move and Launch Blue 10s", group="TrigBot")
 //@Disabled
 public class TrigMoveAndLaunchBlue10s extends TrigMoveAndLaunchBlue {
 

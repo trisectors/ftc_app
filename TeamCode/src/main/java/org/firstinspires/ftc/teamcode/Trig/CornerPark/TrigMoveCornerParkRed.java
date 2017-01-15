@@ -8,12 +8,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 
 
-@Autonomous(name="TrigBot:Trig Move Corne Park Red ", group="TrigBot")
+@Autonomous(name="TrigBot:Corner Park Red ", group="TrigBot")
 //@Disabled
 public class TrigMoveCornerParkRed extends TrigMoveCornerParkBase {
 
-    public void  turnToCorner() {
-        encoderDrive(DRIVE_SPEED * .5,  16, -16, 4.0);
+    public void  turnToCorner() {simpleGyroTurn(.3, 45);
+
     }
 
 }

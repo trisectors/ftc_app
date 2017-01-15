@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
+import org.firstinspires.ftc.teamcode.Trig.TrigAutoBase;
 
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
@@ -69,81 +70,46 @@ import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 //@Autonomous(name="TrigBot:Move and launch Corner Park (No Delay)", group="TrigBot")
 @Disabled
-public class TrigMoveCornerParkBase extends LinearOpMode {
-
-    /* Declare OpMode members. */
-    HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
-    private ElapsedTime     runtime = new ElapsedTime();
-
-    static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 1 ;     // This is < 1.0 if geared UP
-    static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = .6;
-    //static final double     FLICKER                 = 0.5;
-
+public class TrigMoveCornerParkBase extends TrigAutoBase {
 
     public void waitForDelay() {}
     public void turnToCorner() {}
 
     @Override
-    public void runOpMode() {
+    public void doOpMode() {
 
-        /*
-         * Initialize the drive system variables.
-         * The init() method of the hardware class does all the work here
-         */
-        robot.init(hardwareMap);
-
-        // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders");    //
-        telemetry.update();
-
-        robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        idle();
-
-        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        // Send telemetry message to indicate successful Encoder reset
-        telemetry.addData("Path0",  "Starting at %7d :%7d",
-                robot.leftMotor.getCurrentPosition(),
-                robot.rightMotor.getCurrentPosition());
-        telemetry.update();
-
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
 
         waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
+        robot.gate.setPosition(GATE_DOWN_POSITION);
 
         //Drive forward 2ft
-        encoderDrive(DRIVE_SPEED,  25.5,  25.5, 5.0);
+        encoderDrive(DRIVE_SPEED,  30.0,  30.0, 6.0);
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
-        robot.flicker.setPower(100);
+        robot.flicker.setPower(1.00);
         sleep(500);
         robot.flicker.setPower(0);
 
         // load second ball:  turn sweep on, wait 5 sec, turn sweep off
         sleep(500);
+        robot.gate.setPosition(GATE_UP_POSITION);
         robot.sweepMotor.setPower(.5);      // This is for the second ball
         sleep(2500);
         robot.sweepMotor.setPower(0);
-
-        // fire second particle: wait half sec, turn flicker on, wait half second, turn flicker off
+        robot.gate.setPosition(GATE_DOWN_POSITION);
+        // fire second particle wait half sec, turn flicker on, wait half second, turn flicker off
         sleep(500);
-        robot.flicker.setPower(100);
+        robot.flicker.setPower(1.00);
         sleep(500);
         robot.flicker.setPower(0);
+
 
         //
         //
         // turn towards the corner vortex and park on it.
         sleep(500);
         turnToCorner();  //turn
-        encoderDrive(1.0, -60.0, -60.0, 4.0);  //back up into corner
+        encoderDrive(1.0, -40.0, -40.0, 4.0);  //back up into corner
 
         sleep(10000);
 
@@ -151,61 +117,4 @@ public class TrigMoveCornerParkBase extends LinearOpMode {
         telemetry.update();
     }
 
-
-    /*
-     *  Method to perfmorm a relative move, based on encoder counts.
-     *  Encoders are not reset as the move is based on the current position.
-     *  Move will stop if any of three conditions occur:
-     *  1) Move gets to the desired position
-     *  2) Move runs out of time
-     *  3) Driver stops the opmode running.
-     */
-    public void encoderDrive(double speed,
-                             double leftInches, double rightInches,
-                             double timeoutS) {
-        int newLeftTarget;
-        int newRightTarget;
-
-        // Ensure that the opmode is still active
-        if (opModeIsActive()) {
-
-            // Determine new target position, and pass to motor controller
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = robot.rightMotor.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            robot.leftMotor.setTargetPosition(newLeftTarget);
-            robot.rightMotor.setTargetPosition(newRightTarget);
-
-            // Turn On RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            // reset the timeout time and start motion.
-            runtime.reset();
-            robot.leftMotor.setPower(Math.abs(speed));
-            robot.rightMotor.setPower(Math.abs(speed));
-
-            // keep looping while we are still active, and there is time left, and both motors are running.
-            while (opModeIsActive() &&
-                    (runtime.seconds() < timeoutS) &&
-                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
-
-                // Display it for the driver.
-                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Path2",  "Running at %7d :%7d",
-                        robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
-                telemetry.update();
-            }
-
-            // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
-
-            // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-            //  sleep(250);   // optional pause after each move
-        }
-    }
 }

@@ -139,17 +139,19 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
          */
         VuforiaTrackables FTC_2016 = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
 
-        VuforiaTrackable gears = FTC_2016.get(3);
-        gears.setName("Gears");
 
-        VuforiaTrackable legos  = FTC_2016.get(2);
-        legos.setName("LEGOS");
+        VuforiaTrackable wheels  = FTC_2016.get(0);
+        wheels.setName("Wheels");
 
         VuforiaTrackable tools  = FTC_2016.get(1);
         tools.setName("Tools");
 
-        VuforiaTrackable wheels  = FTC_2016.get(0);
-        wheels.setName("Wheels");
+        VuforiaTrackable legos  = FTC_2016.get(2);
+        legos.setName("LEGOS");
+
+        VuforiaTrackable gears = FTC_2016.get(3);
+        gears.setName("Gears");
+
 
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
