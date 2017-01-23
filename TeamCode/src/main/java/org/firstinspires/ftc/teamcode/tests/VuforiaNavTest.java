@@ -35,7 +35,9 @@ package org.firstinspires.ftc.teamcode.tests;
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.Hardware;
 import com.qualcomm.robotcore.util.RobotLog;
+
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -48,212 +50,79 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This OpMode illustrates the basics of using the Vuforia localizer to determine
- * positioning and orientation of robot on the FTC field.
- * The code is structured as a LinearOpMode
- *
- * Vuforia uses the phone's camera to inspect it's surroundings, and attempt to locate target images.
- *
- * When images are located, Vuforia is able to determine the position and orientation of the
- * image relative to the camera.  This sample code than combines that information with a
- * knowledge of where the target images are on the field, to determine the location of the camera.
- *
- * This example assumes a "diamond" field configuration where the red and blue alliance stations
- * are adjacent on the corner of the field furthest from the audience.
- * From the Audience perspective, the Red driver station is on the right.
- * The two vision target are located on the two walls closest to the audience, facing in.
- * The Stones are on the RED side of the field, and the Chips are on the Blue side.
- *
- * A final calculation then uses the location of the camera on the robot to determine the
- * robot's location and orientation on the field.
- *
- * @see VuforiaLocalizer
- * @see VuforiaTrackableDefaultListener
- * see  ftc_app/doc/tutorial/FTC_FieldCoordinateSystemDefinition.pdf
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
- * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
- * is explained below.
- */
 
-@Autonomous(name="Concept: Vuforia Nav Test", group ="Concept")
+@Autonomous(name = "Concept: Vuforia Nav Test", group = "Concept")
 //@Disabled
 public class VuforiaNavTest extends LinearOpMode {
 
     public static final String TAG = "Vuforia Sample";
 
     OpenGLMatrix lastLocation = null;
+    VectorF targetPosition = new VectorF(-1549.4f, -304.8f);
 
-    /**
-     * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
-     * localization engine.
-     */
-    VuforiaLocalizer vuforia;
+    public List<VuforiaTrackable> initializeTrackables() {
+        VuforiaLocalizer vuforia;
 
-    @Override public void runOpMode() {
-
+        // initialize vuforia library.  First we set up the license key and camera direction and create the vuforia object
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(R.id.cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "ASj98IX/////AAAAGeDoiG9tFUO7oBKP9PIwRbMP/FZQcvSH/tItsosVh/vnvrW/LhNBMiOrDdARozpBq6yQomYYJmMWT5kTS3b48Dy0+7yu/rEf0ATZCxAJ1sk9qBnuru/AwWiEs+fwaoFro0Br7OnViNLhp1Kh8zE6dnTYBoRTlAUKR3JkJBGWMSi9YMu7hwa0jmlMr3FvsE/xZt/j+rK2yNH3Qj91nhnU6pBwcoOh6crunuk/BUDnNt2+3kmCt+VhiFzgau/cMNOBfvgb/U4Tzw3WfAwJjEVHAZbmKpKLuiWu5QXnCi7C0HfefLkLe0BvWUo9EnFO5mTp/dMuw5X0lm2b67eP5snY2zsxceiOlBjSu+AXE5S5vhXt";
         parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-        this.vuforia = ClassFactory.createVuforiaLocalizer(parameters);
+        vuforia = ClassFactory.createVuforiaLocalizer(parameters);
 
-        VuforiaTrackables FTC_2016 = this.vuforia.loadTrackablesFromAsset("FTC_2016-17");
-        VuforiaTrackable wheels  = FTC_2016.get(0);
+        // load this year's trackables images from resources
+        VuforiaTrackables FTC_2016 = vuforia.loadTrackablesFromAsset("FTC_2016-17");
+        VuforiaTrackable wheels = FTC_2016.get(0);
         wheels.setName("Wheels");
-        VuforiaTrackable tools  = FTC_2016.get(1);
+        VuforiaTrackable tools = FTC_2016.get(1);
         tools.setName("Tools");
-        VuforiaTrackable legos  = FTC_2016.get(2);
+        VuforiaTrackable legos = FTC_2016.get(2);
         legos.setName("LEGOS");
         VuforiaTrackable gears = FTC_2016.get(3);
         gears.setName("Gears");
+
         /** For convenience, gather together all the trackable objects in one easily-iterable collection */
         List<VuforiaTrackable> allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(FTC_2016);
 
-        /**
-         * We use units of mm here because that's the recommended units of measurement for the
-         * size values specified in the XML for the ImageTarget trackables in data sets. E.g.:
-         *      <ImageTarget name="stones" size="247 173"/>
-         * You don't *have to* use mm here, but the units here and the units used in the XML
-         * target configuration files *must* correspond for the math to work out correctly.
-         */
-        float mmPerInch        = 25.4f;
-        float mmBotWidth       = 18 * mmPerInch;            // ... or whatever is right for your robot
-        float mmFTCFieldWidth  = (12*12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
+        // now, we begin specifying the location of each vision target on the field.
+        float mmPerInch = 25.4f;
+        float mmFTCFieldWidth = (12 * 12 - 2) * mmPerInch;   // the FTC field is ~11'10" center-to-center of the glass panels
 
 
-        initTargets(wheels, tools, legos, gears, mmFTCFieldWidth);
+        // Image locations:  Images start face up at the origin, so we have to rotate and translate them to their correct position.
 
-        // Update location if we have a new one.
-
-
-//        OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-//                .translation(mmBotWidth/2,0,0)
-//                .multiplied(Orientation.getRotationMatrix(
-//                        AxesReference.EXTRINSIC, AxesOrder.YZY,
-//                        AngleUnit.DEGREES, -90, 0, 0));
-//        RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
-//
-//        /**
-//         * Let the trackable listeners we care about know where the phone is. We know that each
-//         * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
-//         * we have not ourselves installed a listener of a different type.
-//         */
-//        ((VuforiaTrackableDefaultListener)gears.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-//        ((VuforiaTrackableDefaultListener)tools.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-//        ((VuforiaTrackableDefaultListener)wheels.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-//        ((VuforiaTrackableDefaultListener)legos.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-
-      waitForStart();
-
-        /** Start tracking the data sets we care about. */
-        FTC_2016.activate();
-
-        VectorF trans= null;
-        Orientation rot= null;
-        while (opModeIsActive()) {
-
-            for (VuforiaTrackable trackable : allTrackables) {
-                /**
-                 * getUpdatedRobotLocation() will return null if no new information is available since
-                 * the last time that call was made, or if the trackable is not currently visible.
-                 * getRobotLocation() will return null if the trackable is not currently visible.
-                 */
-
-                VuforiaTrackableDefaultListener listener = ((VuforiaTrackableDefaultListener) trackable.getListener());
-
-                telemetry.addData(trackable.getName(), listener.isVisible() ? "Visible" : "Not Visible");    //
-
-                OpenGLMatrix robotLocationTransform = listener.getUpdatedRobotLocation();
-
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-
-
-                    // Then you can extract the positions and angles using the getTranslation and getOrientation methods.
-                     trans = robotLocationTransform.getTranslation();
-                     rot = Orientation.getOrientation(robotLocationTransform, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-
-                    // Robot position is defined by the standard Matrix translation (x and y)
-
-
-
-
-                }
-            }
-            /**
-             * Provide feedback as to where the robot was last located (if we know).
-             */
-            if (lastLocation != null) {
-                //  RobotLog.vv(TAG, "robot=%s", format(lastLocation));
-                //telemetry.addData("Pos", format(lastLocation));
-
-                float robotX = trans.get(0);
-                float robotY = trans.get(1);
-
-                // Robot bearing (in Cartesian system) position is defined by the standard Matrix z rotation
-                float robotBearing = rot.thirdAngle * 360.0f / (2.0f*(float)Math.PI);
-
-                telemetry.addData("X", robotX);
-                telemetry.addData("Y", robotY);
-                telemetry.addData("BEARING", robotBearing);
-            }
-            else {
-                //telemetry.addData("Pos", "Unknown");
-
-
-            }
-
-
-            telemetry.update();
-        }
-    }
-
-    public void initTargets(VuforiaTrackable wheels, VuforiaTrackable tools, VuforiaTrackable legos, VuforiaTrackable gears, float mmFTCFieldWidth) {
+        // Gears: rotate 90 deg around X, then 90 around Z
+        // then translate half the field width in X and -1ft in Y.  -1*12*25.4=-304.8
+        // center of image is 8.5in (paper width)/2 + 1 1/2 in (height image should be mounted off floor) 8.5/2+1.5*25.4=42.35
         OpenGLMatrix gearsLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.*/
-                .translation(0, -304.8f, 0)
-                .translation(-mmFTCFieldWidth/2, 0, 0)
+                .translation(-mmFTCFieldWidth / 2, -304.8f, 42.35f)
                 .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
         gears.setLocation(gearsLocationOnField);
         RobotLog.ii(TAG, "Gear Target=%s", format(gearsLocationOnField));
 
-
+        // Tools: rotate 90 deg around X, then 90 around Z
+        // then translate half the field width in X and +3ft in Y.  33*12*25.4=914.4
+        // center of image is 8.5in (paper width)/2 + 1 1/2 in (height image should be mounted off floor) 8.5/2+1.5*25.4=42.35
         OpenGLMatrix toolsLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the RED WALL. Our translation here
-                is a negative translation in X.*/
-                .translation(0, 914.4f, 0)
-                .translation(-mmFTCFieldWidth/2, 0, 0)
+                .translation(-mmFTCFieldWidth / 2, 914.4f, 42.35f)
                 .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 90, 0));
         tools.setLocation(toolsLocationOnField);
         RobotLog.ii(TAG, "Tools Target=%s", format(toolsLocationOnField));
 
-
-
-       /*
-        * To place the Stones Target on the Blue Audience wall:
-        * - First we rotate it 90 around the field's X axis to flip it upright
-        * - Finally, we translate it along the Y axis towards the blue audience wall.
-        */
+        //Wheels: rotate 90 deg around X
+        // then translate half the field width in Y, and +1 ft in X 1*12*25.4=304.8
+        // center of image is 8.5in (paper width)/2 + 1 1/2 in (height image should be mounted off floor) 8.5/2+1.5*25.4=42.35
         OpenGLMatrix wheelsLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the Blue Audience wall.
-                Our translation here is a positive translation in Y.*/
-                .translation(304.8f, 0, 0 )
-                .translation(0, mmFTCFieldWidth/2, 0)
+                .translation(304.8f, mmFTCFieldWidth / 2, 42.35f)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
@@ -261,17 +130,126 @@ public class VuforiaNavTest extends LinearOpMode {
         wheels.setLocation(wheelsLocationOnField);
         RobotLog.ii(TAG, "Wheel Target=%s", format(wheelsLocationOnField));
 
+        //Legos: rotate 90 deg around X
+        // then translate half the field width in Y, and -3 ft in X =3*12*25.4=-914.4
+        // center of image is 8.5in (paper width)/2 + 1 1/2 in (height image should be mounted off floor) 8.5/2+1.5*25.4=42.35
         OpenGLMatrix legosLocationOnField = OpenGLMatrix
-                /* Then we translate the target off to the Blue Audience wall.
-                Our translation here is a positive translation in Y.*/
-                .translation(-914.4f, 0, 0)
-                .translation(0, mmFTCFieldWidth/2, 0)
+                .translation(-914.4f, mmFTCFieldWidth / 2, 42.35f)
                 .multiplied(Orientation.getRotationMatrix(
-                        /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
                         AngleUnit.DEGREES, 90, 0, 0));
         legos.setLocation(legosLocationOnField);
         RobotLog.ii(TAG, "Lego Target=%s", format(legosLocationOnField));
+
+
+        // set phone location on robot
+        // phone location by default is center of bot.
+        // ours is 6.5 in towards the front, so +6.5*25.4 = 165.1mm translated in y.
+        // the camera is also translated off the floor (z axis by about 5 in) 5*25.4=127
+        // it appears the default orientation is in portrait mode aligned with the bot's axes, so our phone is rotated 90deg around x then 180 around y.
+        // Yes...it's upside down!
+        OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
+                .translation(0, 165.1f, 0)
+                .translation(0, 0, 127.0f)
+                .multiplied(Orientation.getRotationMatrix(
+                        AxesReference.EXTRINSIC, AxesOrder.XYX,
+                        AngleUnit.DEGREES, 90, 180, 0));
+        RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
+
+        /**
+         * Let the trackable listeners we care about know where the phone is. We know that each
+         * listener is a {@link VuforiaTrackableDefaultListener} and can so safely cast because
+         * we have not ourselves installed a listener of a different type.
+         */
+        ((VuforiaTrackableDefaultListener) gears.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) tools.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) wheels.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) legos.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+
+        /** Start tracking the data sets we care about. */
+        FTC_2016.activate();
+        return allTrackables;
+    }
+
+
+    @Override
+    public void runOpMode() {
+        HardwareTrig robot = new HardwareTrig(telemetry);
+        robot.init(hardwareMap);
+
+        // Send telemetry message to signify robot waiting;
+        telemetry.addData("Say", "Hello Driver");    //
+        // make sure the gyro is calibrated before continuing
+        robot.gyro.calibrate();
+        while (robot.gyro.isCalibrating()) {
+            telemetry.addData("calibrating gyro...", true);
+            telemetry.update();
+        }
+        telemetry.addData("Done calibrating gyro...", true);
+        telemetry.update();
+
+        // NOTE: investigate doing this after start it it's quick....
+        List<VuforiaTrackable> allTrackables = initializeTrackables();
+        waitForStart();
+
+        VectorF trans = null;
+        Orientation rot = null;
+        while (opModeIsActive()) {
+            // get the heading info.
+            // the Modern Robotics' gyro sensor keeps
+            // track of the current heading for the Z axis only.
+            int gyroAngle = robot.gyro.getHeading();
+            int standardAngle = robot.convertGyroToStandardAngle(gyroAngle);
+            // angleZ  = robot.gyro.getIntegratedZValue();
+
+
+            telemetry.addData("GyroAngle", "Heading %03d", gyroAngle);
+            telemetry.addData("Standard Angle", "%03d", standardAngle);
+            telemetry.addData("TargetPos", "%5.2f %5.2f", targetPosition.get(0), targetPosition.get(1));
+
+
+            for (VuforiaTrackable trackable : allTrackables) {
+                /**
+                 * getUpdatedRobotLocation() will return null if no new information is available since
+                 * the last time that call was made, or if the trackable is not currently visible.
+                 * getRobotLocation() will return null if the trackable is not currently visible.
+                 */
+                VuforiaTrackableDefaultListener listener = ((VuforiaTrackableDefaultListener) trackable.getListener());
+                telemetry.addData(trackable.getName(), listener.isVisible() ? "Visible" : "Not Visible");    //
+
+                OpenGLMatrix robotLocationTransform = listener.getUpdatedRobotLocation();
+                listener.getRobotLocation();
+
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+                    // Then you can extract the positions and angles using the getTranslation and getOrientation methods.
+                    trans = robotLocationTransform.getTranslation();
+                    rot = Orientation.getOrientation(robotLocationTransform, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+                }
+            }
+
+            if (lastLocation != null) {
+                float robotX = trans.get(0);
+                float robotY = trans.get(1);
+
+                // Robot bearing (in Cartesian system) position is defined by the standard Matrix z rotation
+                // float robotBearing = rot.thirdAngle * 360.0f / (2.0f * (float) Math.PI);
+                telemetry.addData("X", robotX);
+                telemetry.addData("Y", robotY);
+                // telemetry.addData("BEARING", robotBearing);
+                VectorF currentPosition = new VectorF(robotX, robotY);
+                VectorF targetVector = targetPosition.subtracted(currentPosition);
+                float headingX = robot.getXFromStandardAngle(standardAngle);
+                float headingY = robot.getYFromStandardAngle(standardAngle);
+                VectorF headingVector = new VectorF(headingX, headingY);
+                telemetry.addData("CurrentPos", "%5.2f %5.2f", currentPosition.get(0), currentPosition.get(1));
+                telemetry.addData("TargetVector", "%5.2f %5.2f", targetVector.get(0), targetVector.get(1));
+                telemetry.addData("HeadingVector", "%5.2f %5.2f", headingX, headingY);
+            }
+
+
+            telemetry.update();
+        }
     }
 
     /**
