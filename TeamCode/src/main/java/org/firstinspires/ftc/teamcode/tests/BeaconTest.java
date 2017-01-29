@@ -32,6 +32,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -53,12 +54,12 @@ import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name = "Trig: Beacon Test", group = "Trig")
-//@Disabled
+@TeleOp(name = "Test: Beacon Test", group = "Test")
+@Disabled
 public class BeaconTest extends OpMode {
 
     /* Declare OpMode members. */
-    HardwareTrig robot = new HardwareTrig(); // use the class created to define a Pushbot's hardware
+    HardwareTrig robot = new HardwareTrig(telemetry, null); // use the class created to define a Pushbot's hardware
     // could also use HardwarePushbotMatrix class.
     double beaconPosition = 1.0;
     double leftBeaconPosition = 1.0;

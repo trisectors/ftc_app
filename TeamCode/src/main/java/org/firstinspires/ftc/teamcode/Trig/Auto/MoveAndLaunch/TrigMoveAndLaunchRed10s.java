@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Trig.MoveAndLaunch;
+package org.firstinspires.ftc.teamcode.Trig.Auto.MoveAndLaunch;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -7,12 +7,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  */
 
 
-
-@Autonomous(name="TrigBot:Move and Launch 10s", group="TrigBot")
+@Autonomous(name = "TrigBot:Move and Launch 10s", group = "TrigBot")
 //@Disabled
 public class TrigMoveAndLaunchRed10s extends TrigMoveAndLaunchRed {
 
-   public void waitForDelay() {
+    public void waitForDelay() {
         sleep(10000);
     }
 

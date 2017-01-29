@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.PushBotDemoBot;
+package org.firstinspires.ftc.teamcode.tests.PushBotDemoBot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -39,27 +39,27 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 /**
  * This file provides basic Telop driving for a Pushbot robot.
  * The code is structured as an Iterative OpMode
- *
+ * <p>
  * This OpMode uses the common Pushbot hardware class to define the devices on the robot.
  * All device access is managed through the HardwarePushbot class.
- *
+ * <p>
  * This particular OpMode executes a basic Tank Drive Teleop for a PushBot
  * It raises and lowers the claw using the Gampad Y and A buttons respectively.
  * It also opens and closes the claws slowly using the left and right Bumper buttons.
- *
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Pushbot: Teleop Tank", group="Pushbot")
+@TeleOp(name = "Pushbot: Teleop Tank", group = "Pushbot")
 @Disabled
-public class PushbotTeleopTank extends OpMode{
+public class PushbotTeleopTank extends OpMode {
 
     /* Declare OpMode members. */
-    HardwareDemoBot robot       = new HardwareDemoBot(); // use the class created to define a Pushbot's hardware
-                                                         // could also use HardwarePushbotMatrix class.
-    double          clawOffset  = 0.0 ;                  // Servo mid position
-    final double    CLAW_SPEED  = 0.02 ;                 // sets rate to move servo
+    HardwareDemoBot robot = new HardwareDemoBot(); // use the class created to define a Pushbot's hardware
+    // could also use HardwarePushbotMatrix class.
+    double clawOffset = 0.0;                  // Servo mid position
+    final double CLAW_SPEED = 0.02;                 // sets rate to move servo
 
 
     /*
@@ -113,7 +113,7 @@ public class PushbotTeleopTank extends OpMode{
         // Move both servos to new position.  Assume servos are mirror image of each other.
 //        clawOffset = Range.clip(clawOffset, -0.5, 0.5);
 //        robot.leftClaw.setPosition(robot.MID_SERVO + clawOffset);
-  //     robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
+        //     robot.rightClaw.setPosition(robot.MID_SERVO - clawOffset);
 //
 //        // Use gamepad buttons to move the arm up (Y) and down (A)
 //        if (gamepad1.y)
@@ -124,8 +124,8 @@ public class PushbotTeleopTank extends OpMode{
 //            robot.armMotor.setPower(0.0);
 
         // Send telemetry message to signify robot running;
-        telemetry.addData("claw",  "Offset = %.2f", clawOffset);
-        telemetry.addData("left",  "%.2f", left);
+        telemetry.addData("claw", "Offset = %.2f", clawOffset);
+        telemetry.addData("left", "%.2f", left);
         telemetry.addData("right", "%.2f", right);
     }
 

@@ -32,6 +32,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -53,15 +54,15 @@ import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name = "Trig: Joystick Test", group = "Trig")
+@TeleOp(name = "Test: Joystick Test", group = "Test")
 //@Disabled
 public class JoystickTest extends OpMode {
 
     /* Declare OpMode members. */
-    HardwareTrig robot = new HardwareTrig(); // use the class created to define a Pushbot's hardware
+    HardwareTrig robot = new HardwareTrig(telemetry, null); // use the class created to define a Pushbot's hardware
     // could also use HardwarePushbotMatrix class.
     double joystick1Position = 1.0;
-    double joystickPosition  = 1.0;
+    double joystickPosition = 1.0;
     final double JOYSTICK_OFFSET = 0.001;
 
 
@@ -101,10 +102,10 @@ public class JoystickTest extends OpMode {
     @Override
     public void loop() {
 
-        telemetry.addData("rx", "%f",gamepad1.right_stick_x );
-        telemetry.addData("ry", "%f",gamepad1.right_stick_y );
-        telemetry.addData("lx", "%f",gamepad1.left_stick_x );
-        telemetry.addData("ly", "%f",gamepad1.left_stick_y );
+        telemetry.addData("rx", "%f", gamepad1.right_stick_x);
+        telemetry.addData("ry", "%f", gamepad1.right_stick_y);
+        telemetry.addData("lx", "%f", gamepad1.left_stick_x);
+        telemetry.addData("ly", "%f", gamepad1.left_stick_y);
 
         telemetry.update();
 

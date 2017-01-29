@@ -33,20 +33,19 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Trig.TrigAutoBase;
 
 
-@Autonomous(name = "Trig: Beacon Test Red", group = "Trig")
+@Autonomous(name = "Test: Beacon Test Red", group = "Test")
 //@Disabled
 public class AutoBeaconTestRed extends TrigAutoBase {
+    public void waitForDelay() {}
 
 
-    public void doOpMode(){
-     pressBeacon(true);
+    public void executeMovements() {
+        selectAndPressBeacon(true);
     }
-
 
 
 }

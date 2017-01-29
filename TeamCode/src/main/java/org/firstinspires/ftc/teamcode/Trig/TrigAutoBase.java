@@ -32,111 +32,74 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-/**
- * This file illustrates the concept of driving a path based on encoder counts.
- * It uses the common Pushbot hardware class to define the drive on the robot.
- * The code is structured as a LinearOpMode
- *
- * The code REQUIRES that you DO have encoders on the wheels,
- *   otherwise you would use: PushbotAutoDriveByTime;
- *
- *  This code ALSO requires that the drive Motors have been configured such that a positive
- *  power command moves them forwards, and causes the encoders to count UP.
- *
- *   The desired path in this example is:
- *   - Drive forward for 48 inches
- *   - Spin right for 12 Inches
- *   - Drive Backwards for 24 inches
- *   - Stop and close the claw.
- *
- *  The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
- *  that performs the actual movement.
- *  This methods assumes that each movement is relative to the last stopping place.
- *  There are other ways to perform encoder based moves, but this method is probably the simplest.
- *  This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 
+import java.util.List;
 
-public class TrigAutoBase extends LinearOpMode {
+// Base class for all TrigBot autonomous programs
+
+public abstract class TrigAutoBase extends LinearOpMode {
 
     /* Declare OpMode members. */
-    public HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
-    public ElapsedTime     runtime = new ElapsedTime();
+    public HardwareTrig robot = new HardwareTrig(telemetry, this);   // Use TrigBot's hardware
+    public ElapsedTime runtime = new ElapsedTime();   // used for encoderDrive's timeout
 
-    public static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    public static final double     DRIVE_GEAR_REDUCTION    = 1 ;     // This is < 1.0 if geared UP
-    public static final double     WHEEL_DIAMETER_INCHES   = 4.0 ;     // For figuring circumference
-    public static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    public static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
+    public static final double DRIVE_GEAR_REDUCTION = 1;     // This is < 1.0 if geared UP
+    public static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    public static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    public static final double     DRIVE_SPEED             = .4;
-    public static final double TURN_SPEED      = .5;
-    public final double LEFT_BEACON_DOWN = 1.0;
-    public final double LEFT_BEACON_UP = 0.0;
-    public final double LEFT_BEACON_PARTIAL_DOWN = 0.2;
-    public final double RIGHT_BEACON_UP = 1.0;
-    public final double RIGHT_BEACON_DOWN = 0.0;
-    public final double RIGHT_BEACON_PARTIAL_DOWN = 0.8;
-    public double GATE_DOWN_POSITION = .7;
-    public double GATE_UP_POSITION = 0;
-    public double sweepSpeed = 0.0;
-    //static final double     FLICKER                 = 0.5;
 
+    protected float DRIVE_SPEED = .7f;
 
-    public void waitForDelay() {}
-    public void turnToCorner() {}
-    public void doOpMode() {}
+    protected List<VuforiaTrackable> allTrackables;
+
+    // define some abstract methods which actual autonomous code must implement
+    public abstract void waitForDelay();
+    public abstract void executeMovements();
+
 
     @Override
     public void runOpMode() {
-        /*
-         * Initialize the drive system variables.
-         * The init() method of the hardware class does all the work here
-         */
         robot.init(hardwareMap);
 
         // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders", "DON'T PICK UP CONTROLLER");    //
+        telemetry.addData("Status", "Resetting Encoders");
         telemetry.update();
 
+        // reset encoders
         robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         idle();
-
         robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        // Send telemetry message to indicate successful Encoder reset
-        telemetry.addData("Path0",  "Starting at %7d :%7d",
-                robot.leftMotor.getCurrentPosition(),
-                robot.rightMotor.getCurrentPosition());
-        telemetry.update();
-
-            robot.beaconLeft.setPosition(LEFT_BEACON_DOWN);
-            robot.beaconRight.setPosition(RIGHT_BEACON_DOWN);
-        // Wait for the game to start (driver presses PLAY)
-
-        robot.gyro.calibrate();
-
         // make sure the gyro is calibrated before continuing
-        while (!isStopRequested() && robot.gyro.isCalibrating())  {
+        robot.gyro.calibrate();
+        while (!isStopRequested() && robot.gyro.isCalibrating()) {
             sleep(50);
             idle();
         }
 
-        doOpMode();
+        // NOTE: investigate doing this after start it it's quick....
+      allTrackables =  robot.initializeTrackables();
 
+
+        // Wait for the game to start (Display Gyro value), and reset gyro before we move..
+        while (!isStarted()) {
+            telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
+            telemetry.update();
+            idle();
+        }
+        executeMovements();
     }
 
 
-    public void simpleGyroTurn( double speed, double angle) {
+    public void simpleGyroTurn(double speed, double angle) {
 
         robot.gyro.resetZAxisIntegrator();
 
@@ -144,9 +107,8 @@ public class TrigAutoBase extends LinearOpMode {
         telemetry.update();
 
         if (angle > 0) {
-            robot.leftMotor.setPower(TURN_SPEED);
-            robot.rightMotor.setPower(-1.0 * TURN_SPEED);
-
+            robot.leftMotor.setPower(-1.0 * speed);
+            robot.rightMotor.setPower(speed);
 
 
             while (opModeIsActive() && robot.gyro.getIntegratedZValue() < angle) {
@@ -156,14 +118,16 @@ public class TrigAutoBase extends LinearOpMode {
             }
 
         } else {
-            robot.rightMotor.setPower(TURN_SPEED);
-            robot.leftMotor.setPower(-1.0 * TURN_SPEED);
-            while (opModeIsActive() && robot.gyro.getIntegratedZValue() > angle) {
+            robot.rightMotor.setPower(-1.0 * speed);
+            robot.leftMotor.setPower( speed);
+            while (opModeIsActive() && robot.gyro.getIntegratedZValue() >  angle) {
                 // Update telemetry & Allow time for other processes to run.
                 telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
                 telemetry.update();
             }
         }
+        robot.leftMotor.setPower(0);
+        robot.rightMotor.setPower(0);
     }
 
     /*
@@ -184,8 +148,8 @@ public class TrigAutoBase extends LinearOpMode {
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = robot.rightMotor.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightTarget = robot.rightMotor.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
             robot.leftMotor.setTargetPosition(newLeftTarget);
             robot.rightMotor.setTargetPosition(newRightTarget);
 
@@ -204,8 +168,8 @@ public class TrigAutoBase extends LinearOpMode {
                     (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
-                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Path2",  "Running at %7d :%7d",
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
                         robot.leftMotor.getCurrentPosition(),
                         robot.rightMotor.getCurrentPosition());
                 telemetry.update();
@@ -224,38 +188,45 @@ public class TrigAutoBase extends LinearOpMode {
         }
     }
 
-    public void pressBeacon(boolean redTeam) {
+    // read the color sensor, and then activate the
+    // proper servo to press the correct button based on our alliance color
+    public void selectAndPressBeacon(boolean redTeam) {
+           final double     TURN_SPEED              = 0.4;     // Nominal half speed for better accuracy.
 
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (redTeam) {
-                robot.beaconLeft.setPosition(LEFT_BEACON_UP);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
                 sleep(250);
                 encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
-                robot.beaconLeft.setPosition(LEFT_BEACON_PARTIAL_DOWN);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
             } else {
-                robot.beaconRight.setPosition(RIGHT_BEACON_UP);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
                 sleep(250);
                 encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
-                robot.beaconRight.setPosition(RIGHT_BEACON_PARTIAL_DOWN);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
             }
-        } else {
+        } else {  // we see blue
             if (!redTeam) {
-                robot.beaconLeft.setPosition(LEFT_BEACON_UP);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
                 sleep(250);
                 encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
-                robot.beaconLeft.setPosition(LEFT_BEACON_PARTIAL_DOWN);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
             } else {
-                robot.beaconRight.setPosition(RIGHT_BEACON_UP);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
                 sleep(250);
                 encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
-                robot.beaconRight.setPosition(RIGHT_BEACON_PARTIAL_DOWN);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
+
             }
-
-
         }
 
         telemetry.addData("Red  ", robot.colorSensor.red());
         telemetry.addData("blue  ", robot.colorSensor.blue());
         telemetry.update();
+
+        encoderDrive(DRIVE_SPEED, -4, -4, 5);
+        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+
     }
 }

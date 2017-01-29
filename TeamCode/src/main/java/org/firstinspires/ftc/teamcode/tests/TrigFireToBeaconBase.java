@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.Trig;
+package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -42,7 +42,6 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -51,6 +50,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,34 +59,34 @@ import java.util.List;
  * This file illustrates the concept of driving a path based on encoder counts.
  * It uses the common Pushbot hardware class to define the drive on the robot.
  * The code is structured as a LinearOpMode
- *
+ * <p>
  * The code REQUIRES that you DO have encoders on the wheels,
- *   otherwise you would use: PushbotAutoDriveByTime;
- *
- *  This code ALSO requires that the drive Motors have been configured such that a positive
- *  power command moves them forwards, and causes the encoders to count UP.
- *
- *   The desired path in this example is:
- *   - Drive forward for 48 inches
- *   - Spin right for 12 Inches
- *   - Drive Backwards for 24 inches
- *   - Stop and close the claw.
- *
- *  The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
- *  that performs the actual movement.
- *  This methods assumes that each movement is relative to the last stopping place.
- *  There are other ways to perform encoder based moves, but this method is probably the simplest.
- *  This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
- *
+ * otherwise you would use: PushbotAutoDriveByTime;
+ * <p>
+ * This code ALSO requires that the drive Motors have been configured such that a positive
+ * power command moves them forwards, and causes the encoders to count UP.
+ * <p>
+ * The desired path in this example is:
+ * - Drive forward for 48 inches
+ * - Spin right for 12 Inches
+ * - Drive Backwards for 24 inches
+ * - Stop and close the claw.
+ * <p>
+ * The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
+ * that performs the actual movement.
+ * This methods assumes that each movement is relative to the last stopping place.
+ * There are other ways to perform encoder based moves, but this method is probably the simplest.
+ * This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TrigBot:FireToBeaconBase", group="TrigBot")
-//@Disabled
+@Autonomous(name = "TrigBot:FireToBeaconBase", group = "TrigBot")
+@Disabled
 public class TrigFireToBeaconBase extends LinearOpMode {
     /* Declare OpMode members. */
-    HardwareTrig robot = new HardwareTrig();   // Use a Pushbot's hardware
+    HardwareTrig robot = new HardwareTrig(telemetry, this);   // Use a Pushbot's hardware
     private ElapsedTime runtime = new ElapsedTime();
 
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
@@ -99,9 +99,9 @@ public class TrigFireToBeaconBase extends LinearOpMode {
     public VuforiaLocalizer vuforia;
     //static final double     FLICKER                 = 0.5;
 
-    static final double     HEADING_THRESHOLD       = 1 ;      // As tight as we can make it with an integer gyro
-    static final double     P_TURN_COEFF            = 0.1;     // Larger is more responsive, but also less stable
-    static final double     P_DRIVE_COEFF           = 0.15;     // Larger is more responsive, but also less stable
+    static final double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
+    static final double P_TURN_COEFF = 0.1;     // Larger is more responsive, but also less stable
+    static final double P_DRIVE_COEFF = 0.15;     // Larger is more responsive, but also less stable
 
     public void waitForDelay() {
     }
@@ -139,8 +139,6 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         allTrackables.addAll(FTC_2016);
 
 
-
-
         //Init distance parameters
         float mmPerInch = 25.4f;
         float mmBotWidth = 18 * mmPerInch;            // ... or whatever is right for your robot
@@ -176,11 +174,10 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         robot.gyro.calibrate();
 
         // make sure the gyro is calibrated before continuing
-        while (!isStopRequested() && robot.gyro.isCalibrating())  {
+        while (!isStopRequested() && robot.gyro.isCalibrating()) {
             sleep(50);
             idle();
         }
-
 
 
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
@@ -192,8 +189,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         robot.gyro.resetZAxisIntegrator();
 
 
-
-                FTC_2016.activate();
+        FTC_2016.activate();
 
 
 //
@@ -209,12 +205,8 @@ public class TrigFireToBeaconBase extends LinearOpMode {
 //            telemetry.addData("Y", robotY);
 //            telemetry.addData("BEARING", robotBearing);
 //    }
-    //     else {
+        //     else {
 //}
-
-
-
-
 
 
 //        waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
@@ -240,10 +232,9 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         robot.flicker.setPower(0);
 
 
-
 //          Turn and drive forward 2 more ft.
-             simpleGyroTurn(TURN_SPEED, 90);
-            encoderDrive(DRIVE_SPEED, 24, 24, 5.0);
+        simpleGyroTurn(TURN_SPEED, 63);
+        encoderDrive(DRIVE_SPEED, 44, 44, 5.0);
 
 
         //Turn until found NAV target
@@ -251,8 +242,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         robot.leftMotor.setPower(-1 * TURN_SPEED);
 
 
-
-        OpenGLMatrix robotLocationTransform=null;
+        OpenGLMatrix robotLocationTransform = null;
         VuforiaTrackable trackable = gears;
         VuforiaTrackableDefaultListener listener = ((VuforiaTrackableDefaultListener) trackable.getListener());
         do {
@@ -260,8 +250,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
             telemetry.update();
             //
             robotLocationTransform = listener.getUpdatedRobotLocation();
-        }  while (!listener.isVisible());
-
+        } while (!listener.isVisible());
 
 
         robot.leftMotor.setPower(0);
@@ -276,7 +265,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
                 .translation(0, -304.8f, 0)
-                .translation(-mmFTCFieldWidth/2, 0, 0)
+                .translation(-mmFTCFieldWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
@@ -289,7 +278,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
                 /* Then we translate the target off to the RED WALL. Our translation here
                 is a negative translation in X.*/
                 .translation(0, 914.4f, 0)
-                .translation(-mmFTCFieldWidth/2, 0, 0)
+                .translation(-mmFTCFieldWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X, then 90 in Z */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
@@ -307,8 +296,8 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         OpenGLMatrix wheelsLocationOnField = OpenGLMatrix
                 /* Then we translate the target off to the Blue Audience wall.
                 Our translation here is a positive translation in Y.*/
-                .translation(304.8f, 0, 0 )
-                .translation(0, mmFTCFieldWidth/2, 0)
+                .translation(304.8f, 0, 0)
+                .translation(0, mmFTCFieldWidth / 2, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
@@ -320,7 +309,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
                 /* Then we translate the target off to the Blue Audience wall.
                 Our translation here is a positive translation in Y.*/
                 .translation(-914.4f, 0, 0)
-                .translation(0, mmFTCFieldWidth/2, 0)
+                .translation(0, mmFTCFieldWidth / 2, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         /* First, in the fixed (field) coordinate system, we rotate 90deg in X */
                         AxesReference.EXTRINSIC, AxesOrder.XZX,
@@ -329,21 +318,21 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         RobotLog.ii(TAG, "Lego Target=%s", format(legosLocationOnField));
 
         OpenGLMatrix phoneLocationOnRobot = OpenGLMatrix
-                .translation(mmBotWidth/2,0,0)
+                .translation(mmBotWidth / 2, 0, 0)
                 .multiplied(Orientation.getRotationMatrix(
                         AxesReference.EXTRINSIC, AxesOrder.YZY,
                         AngleUnit.DEGREES, -90, 0, 0));
         RobotLog.ii(TAG, "phone=%s", format(phoneLocationOnRobot));
 
-        ((VuforiaTrackableDefaultListener)gears.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)tools.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)wheels.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
-        ((VuforiaTrackableDefaultListener)legos.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) gears.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) tools.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) wheels.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+        ((VuforiaTrackableDefaultListener) legos.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
 
 
     }
 
-    public void gyroTurn (  double speed, double angle) {
+    public void gyroTurn(double speed, double angle) {
 
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
@@ -353,7 +342,7 @@ public class TrigFireToBeaconBase extends LinearOpMode {
     }
 
 
-    public void simpleGyroTurn( double speed, double angle) {
+    public void simpleGyroTurn(double speed, double angle) {
 
         robot.gyro.resetZAxisIntegrator();
 
@@ -382,9 +371,9 @@ public class TrigFireToBeaconBase extends LinearOpMode {
     }
 
     boolean onHeading(double speed, double angle, double PCoeff) {
-        double   error ;
-        double   steer ;
-        boolean  onTarget = false ;
+        double error;
+        double steer;
+        boolean onTarget = false;
         double leftSpeed;
         double rightSpeed;
 
@@ -393,14 +382,13 @@ public class TrigFireToBeaconBase extends LinearOpMode {
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
-            leftSpeed  = 0.0;
+            leftSpeed = 0.0;
             rightSpeed = 0.0;
             onTarget = true;
-        }
-        else {
+        } else {
             steer = getSteer(error, PCoeff);
-            rightSpeed  = speed * steer;
-            leftSpeed   = -rightSpeed;
+            rightSpeed = speed * steer;
+            leftSpeed = -rightSpeed;
         }
 
         // Send desired speeds to motors.
@@ -421,15 +409,16 @@ public class TrigFireToBeaconBase extends LinearOpMode {
 
         // calculate error in -179 to +180 range  (
         robotError = targetAngle - robot.gyro.getIntegratedZValue();
-        while (robotError > 180)  robotError -= 360;
+        while (robotError > 180) robotError -= 360;
         while (robotError <= -180) robotError += 360;
         return robotError;
     }
 
     /**
      * returns desired steering force.  +/- 1 range.  +ve = steer left
-     * @param error   Error angle in robot relative degrees
-     * @param PCoeff  Proportional Gain Coefficient
+     *
+     * @param error  Error angle in robot relative degrees
+     * @param PCoeff Proportional Gain Coefficient
      * @return
      */
     public double getSteer(double error, double PCoeff) {
@@ -455,10 +444,9 @@ public class TrigFireToBeaconBase extends LinearOpMode {
         if (opModeIsActive()) {
 
 
-
             // Determine new target position, and pass to motor controller
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = robot.rightMotor.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightTarget = robot.rightMotor.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
             robot.leftMotor.setTargetPosition(newLeftTarget);
             robot.rightMotor.setTargetPosition(newRightTarget);
 
@@ -477,8 +465,8 @@ public class TrigFireToBeaconBase extends LinearOpMode {
                     (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
-                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Path2",  "Running at %7d :%7d",
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
                         robot.leftMotor.getCurrentPosition(),
                         robot.rightMotor.getCurrentPosition());
                 telemetry.update();

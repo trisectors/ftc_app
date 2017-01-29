@@ -30,7 +30,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.tests;
+package org.firstinspires.ftc.teamcode.tests.PushBotDemoBot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -39,47 +39,41 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.PushBotDemoBot.HardwareDemoBot;
-import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
-
 /**
  * This file illustrates the concept of driving a path based on encoder counts.
  * It uses the common Pushbot hardware class to define the drive on the robot.
  * The code is structured as a LinearOpMode
- *
+ * <p>
  * The code REQUIRES that you DO have encoders on the wheels,
- *   otherwise you would use: PushbotAutoDriveByTime;
- *
- *  This code ALSO requires that the drive Motors have been configured such that a positive
- *  power command moves them forwards, and causes the encoders to count UP.
- *
- *   The desired path in this example is:
- *   - Drive forward for 48 inches
- *   - Spin right for 12 Inches
- *   - Drive Backwards for 24 inches
- *   - Stop and close the claw.
- *
- *  The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
- *  that performs the actual movement.
- *  This methods assumes that each movement is relative to the last stopping place.
- *  There are other ways to perform encoder based moves, but this method is probably the simplest.
- *  This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
- *
+ * otherwise you would use: PushbotAutoDriveByTime;
+ * <p>
+ * This code ALSO requires that the drive Motors have been configured such that a positive
+ * power command moves them forwards, and causes the encoders to count UP.
+ * <p>
+ * The desired path in this example is:
+ * - Drive forward for 48 inches
+ * - Spin right for 12 Inches
+ * - Drive Backwards for 24 inches
+ * - Stop and close the claw.
+ * <p>
+ * The code is written using a method called: encoderDrive(speed, leftInches, rightInches, timeoutS)
+ * that performs the actual movement.
+ * This methods assumes that each movement is relative to the last stopping place.
+ * There are other ways to perform encoder based moves, but this method is probably the simplest.
+ * This code uses the RUN_TO_POSITION mode to enable the Motor controllers to generate the run profile
+ * <p>
  * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="TrigBot: TrigBotBeaconTest", group="Pushbot")
+@Autonomous(name = "Pushbot: AutoTrigBot", group = "Pushbot")
 @Disabled
-public  class TrigBotBeaconTest extends LinearOpMode {
-
-    HardwareTrig robot   = new HardwareTrig();   // Use a Pushbot's hardware
+public class DemoBotAuto extends LinearOpMode {
 
     /* Declare OpMode members. */
-
+    HardwareDemoBot robot = new HardwareDemoBot();   // Use a DemoBot's hardware
     private ElapsedTime runtime = new ElapsedTime();
     ColorSensor colorSensor;    // Hardware Device Object
-
 
 
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
@@ -88,7 +82,7 @@ public  class TrigBotBeaconTest extends LinearOpMode {
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double DRIVE_SPEED = 0.6;
-    static final double TURN_SPEED = 0.1;
+    static final double TURN_SPEED = 0.5;
 
     @Override
     public void runOpMode() {
@@ -117,8 +111,7 @@ public  class TrigBotBeaconTest extends LinearOpMode {
         telemetry.update();
 
 
-
-            // Wait for the game to start (driver presses PLAY)
+        // Wait for the game to start (driver presses PLAY)
         waitForStart();
 
 
@@ -132,12 +125,9 @@ public  class TrigBotBeaconTest extends LinearOpMode {
     public boolean mostlyRed() {
         telemetry.addData("Red  ", colorSensor.red());
         telemetry.addData("Blue ", colorSensor.blue());
-    return colorSensor.red() > colorSensor.blue();
+        return colorSensor.red() > colorSensor.blue();
 
     }
-
-
-
 
 
     void mainLoop() {
@@ -156,42 +146,31 @@ public  class TrigBotBeaconTest extends LinearOpMode {
 
     public void innerDrive(boolean weAreRed) {
         int dir = getDirection(weAreRed);
-        double d1=12.0;
-        double d2=48.0;
-        //double d3=24.0;
-       // double d4=24.0;
+        double d1 = 10.0;
+        double d2 = 30.0;
+        double d3 = 24.0;
+
 
         encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
-        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
-        // -11.77 is a 90 Deg. turn
+        encoderDrive(TURN_SPEED, 11.77 * dir, -11.77 * dir, 4.0);
+
         encoderDrive(DRIVE_SPEED, d2, d2, 5.0);
-        encoderDrive(TURN_SPEED, 5.885 * dir, -5.885 * dir, 4.0);
-        //-5.885 is a 45 Deg. turn
-        //encoderDrive(DRIVE_SPEED, d3, d3, 5.0);
-        //encoderDrive(TURN_SPEED, 11.77 * dir, -11.77 * dir, 4.0);
+        encoderDrive(TURN_SPEED, -11.77 * dir, 11.77 * dir, 4.0);
 
-        //encoderDrive(DRIVE_SPEED, d4, d4, 5.0);
-
-
-
-
-
-
-
+        encoderDrive(DRIVE_SPEED, d3, d3, 5.0);
+        encoderDrive(TURN_SPEED, 11.77 * dir, -11.77 * dir, 4.0);
+        //put drive until beacon
 
         driveToBeacon();
         pushButton(weAreRed);
 
     }
-
-
-
 
     public void outerDrive(boolean weAreRed) {
-        int dir=getDirection(weAreRed);
+        int dir = getDirection(weAreRed);
 
-        double d1=10.0; //Modify these
-        double d2=30.0;
+        double d1 = 10.0; //Modify these
+        double d2 = 30.0;
 
 
         encoderDrive(DRIVE_SPEED, d1, d1, 5.0);
@@ -204,9 +183,13 @@ public  class TrigBotBeaconTest extends LinearOpMode {
         pushButton(weAreRed);
     }
 
-    void driveToBeacon() {}
+    void driveToBeacon() {
+    }
 
-    void pushButton(boolean weAreRed) {}
+    void pushButton(boolean weAreRed) {
+
+    }
+
 
     /*
      *  Method to perfmorm a relative move, based on encoder counts.
@@ -226,8 +209,8 @@ public  class TrigBotBeaconTest extends LinearOpMode {
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = robot.rightMotor.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightTarget = robot.rightMotor.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
             robot.leftMotor.setTargetPosition(newLeftTarget);
             robot.rightMotor.setTargetPosition(newRightTarget);
 
@@ -242,14 +225,14 @@ public  class TrigBotBeaconTest extends LinearOpMode {
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             while (opModeIsActive() &&
-                   (runtime.seconds() < timeoutS) &&
-                   (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
+                    (runtime.seconds() < timeoutS) &&
+                    (robot.leftMotor.isBusy() && robot.rightMotor.isBusy())) {
 
                 // Display it for the driver.
-                telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Path2",  "Running at %7d :%7d",
-                                            robot.leftMotor.getCurrentPosition(),
-                                            robot.rightMotor.getCurrentPosition());
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Running at %7d :%7d",
+                        robot.leftMotor.getCurrentPosition(),
+                        robot.rightMotor.getCurrentPosition());
                 telemetry.update();
             }
 

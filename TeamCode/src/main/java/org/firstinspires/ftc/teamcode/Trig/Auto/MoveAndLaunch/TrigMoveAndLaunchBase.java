@@ -30,41 +30,51 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package org.firstinspires.ftc.teamcode.tests;
+package org.firstinspires.ftc.teamcode.Trig.Auto.MoveAndLaunch;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 import org.firstinspires.ftc.teamcode.Trig.TrigAutoBase;
 
-/**
- * This file provides basic Telop driving for a Pushbot robot.
- * The code is structured as an Iterative OpMode
- * <p>
- * This OpMode uses the common Pushbot hardware class to define the devices on the robot.
- * All device access is managed through the HardwarePushbot class.
- * <p>
- * This particular OpMode executes a basic Tank Drive Teleop for a PushBot
- * It raises and lowers the claw using the Gampad Y and A buttons respectively.
- * It also opens and closes the claws slowly using the left and right Bumper buttons.
- * <p>
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
 
-@Autonomous(name = "Test: Color Test", group = "Test")
-//@Disabled
-public  abstract class TeleOpColorTest extends TrigAutoBase {
+// base class for starting in the corner, firing two particles and then parking on the center vortex
+public abstract class TrigMoveAndLaunchBase extends TrigAutoBase {
+
+    public abstract void turnToBall();
+
     @Override
     public void executeMovements() {
-        while (opModeIsActive()) {
-            telemetry.addData("Red  ", robot.colorSensor.red());
-            telemetry.addData("blue  ", robot.colorSensor.blue());
-            telemetry.update();
-        }
-    }
-}
+        waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
 
+        //Drive forward 2ft
+
+        encoderDrive(DRIVE_SPEED, 52.5, 52.5, 5.0);
+
+        // fire first particle: turn flicker on to 100, wait half second, turn flicker off
+        robot.flickerFire();
+        // load second ball:  turn sweep on, wait 5 sec, turn sweep off
+        sleep(500);
+        robot.sweepMotor.setPower(.5);      // This is for the second ball
+        sleep(2500);
+        robot.sweepMotor.setPower(0);
+        sleep(500);
+
+        // fire second particle: wait half sec, turn flicker on, wait half second, turn flicker off
+        robot.flickerFire();
+        sleep(500);
+        // knock ball off center platform: drive forward 1/2 foot and park
+        sleep(500);
+        encoderDrive(1.0, 18, 18, 4.0);  //ram
+        encoderDrive(1.0, -4, -4, 4.0);  //back up
+
+        encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
+
+        turnToBall();
+
+        encoderDrive(DRIVE_SPEED, 10, 10, 4);
+
+
+        telemetry.addData("Path", "Complete");
+        telemetry.update();
+    }
+
+
+}

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Trig.CornerPark;
+package org.firstinspires.ftc.teamcode.Trig.Auto.CornerPark;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -7,11 +7,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  */
 
 
-
-@Autonomous(name="TrigBot:Corner Park Blue 10s", group="TrigBot")
+@Autonomous(name = "TrigBot:Corner Park Blue 10s", group = "TrigBot")
 //@Disabled
 public class TrigMoveCornerParkBlue10s extends TrigMoveCornerParkBlue {
 
-    public void waitForDelay() {sleep(10000);}
+    public void waitForDelay() {
+        sleep(10000);
+    }
 
 }

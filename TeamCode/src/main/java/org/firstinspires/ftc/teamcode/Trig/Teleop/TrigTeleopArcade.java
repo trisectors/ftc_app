@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.Trig.Teleop.TrigTeleopTank;
 
 
 @TeleOp(name = "TrigBot:TeleopArcade", group = "TrigBot")
-//@Disabled
 public class TrigTeleopArcade extends TrigTeleopBase {
     public void steer() {
         double turn = gamepad1.right_stick_x;
@@ -23,8 +22,8 @@ public class TrigTeleopArcade extends TrigTeleopBase {
             turn = gamepad1.left_stick_x;
             power = gamepad1.left_stick_y;
             if (turn != 0.0 || power != 0) {
-                robot.rightMotor.setPower((power + turn) * DRIVE_SPEED);
-                robot.leftMotor.setPower((power - turn) * DRIVE_SPEED);
+                robot.rightMotor.setPower((power - turn) * DRIVE_SPEED);
+                robot.leftMotor.setPower((power + turn) * DRIVE_SPEED);
             } else {
                 robot.leftMotor.setPower(0);
                 robot.rightMotor.setPower(0);

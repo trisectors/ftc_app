@@ -37,16 +37,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.Trig.TrigAutoBase;
 
 
-@Autonomous(name = "Trig: Beacon Test Blue" +
-        "", group = "Trig")
+@Autonomous(name = "Test: Beacon Test Blue", group = "Test")
 //@Disabled
 public class AutoBeaconTestBlue extends TrigAutoBase {
+    public void waitForDelay() {}
 
-
-    public void doOpMode(){
-     pressBeacon(false);
+    public void executeMovements() {
+        selectAndPressBeacon(false);
     }
-
 
 
 }
