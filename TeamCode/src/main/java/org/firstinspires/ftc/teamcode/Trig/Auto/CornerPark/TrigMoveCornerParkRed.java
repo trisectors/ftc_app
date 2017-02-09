@@ -13,9 +13,9 @@ public class TrigMoveCornerParkRed extends TrigMoveCornerParkBase {
 
     public void waitForDelay() {}
 
-    public void turnToCorner() {
-        simpleGyroTurn(.3, -45);
-
+    public void initializeTeam(){
+        initialAngle = 0;
+        cornerAngle = -55;
     }
 
 }

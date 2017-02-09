@@ -32,6 +32,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig;
 
+import android.text.InputFilter;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -55,6 +57,7 @@ public abstract class TrigAutoBase extends LinearOpMode {
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
     protected float DRIVE_SPEED = .7f;
+    // Change everything related to DRIVE_SPEED. Preferably change DRIVE_SPEED to 1.0.
 
     protected List<VuforiaTrackable> allTrackables;
 
@@ -70,6 +73,9 @@ public abstract class TrigAutoBase extends LinearOpMode {
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Resetting Encoders");
         telemetry.update();
+
+        robot.beaconLeft.setPosition(robot.LEFT_BEACON_DOWN);
+        robot.beaconRight.setPosition(robot.RIGHT_BEACON_DOWN);
 
         // reset encoders
         robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -195,26 +201,26 @@ public abstract class TrigAutoBase extends LinearOpMode {
 
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
             if (redTeam) {
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                encoderDrive(TURN_SPEED, 8 , 8, 5.0);
                 robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
             } else {
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                encoderDrive(TURN_SPEED, 8, 8, 5.0);
                 robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
             }
         } else {  // we see blue
             if (!redTeam) {
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                encoderDrive(TURN_SPEED, 8, 8, 5.0);
                 robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
             } else {
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 12.0, 12.0, 5.0);
+                encoderDrive(TURN_SPEED, 8, 8, 5.0);
                 robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
 
             }
@@ -225,8 +231,8 @@ public abstract class TrigAutoBase extends LinearOpMode {
         telemetry.update();
 
         encoderDrive(DRIVE_SPEED, -4, -4, 5);
-        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
-        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
+        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
 
     }
 }

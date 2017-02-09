@@ -41,7 +41,8 @@ public class HardwareTrig {
     public static final double RIGHT_BEACON_PARTIAL_DOWN = 0.8;
     public static final double COUNTS_PER_MOTOR_REV = 1440;
     public static final double DRIVE_GEAR_REDUCTION = 1;
-    public static final double COUNTS_PER_FLICKER_REVOLUTION = COUNTS_PER_MOTOR_REV / DRIVE_GEAR_REDUCTION;
+    public static final double FLICKER_GEAR_REDUCTION = 2;
+    public static final double COUNTS_PER_FLICKER_REVOLUTION = COUNTS_PER_MOTOR_REV / FLICKER_GEAR_REDUCTION;
     public static final double WHEEL_DIAMETER_INCHES = 4;
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
@@ -56,8 +57,6 @@ public class HardwareTrig {
     static final double     HEADING_THRESHOLD       = 1 ;      // As tight as we can make it with an integer gyro
     static final double     P_TURN_COEFF            = 0.1;     // Larger is more responsive, but also less stable
     static final double     P_DRIVE_COEFF           = 0.015;     // Larger is more responsive, but also less stable
-
-
 
     public DcMotor leftMotor = null;
     public DcMotor rightMotor = null;
@@ -328,10 +327,6 @@ public class HardwareTrig {
         return allTrackables;
     }
     
-    
-    
-    
-
 
     /**
      * A simple utility that extracts positioning information from a transformation matrix
@@ -342,10 +337,36 @@ public class HardwareTrig {
     }
 
 
+    public interface ErrorAngleCalculator
+    {
+        public double getErrorAngle();
+    };
 
-    public void gyroDrive ( double speed,
-                            double distance,
-                            double angle) {
+    private class GyroErrorAngleCalculator implements ErrorAngleCalculator
+    {
+        double angle;
+
+        GyroErrorAngleCalculator(double angle) {
+            this.angle = angle;
+        }
+
+        public double getErrorAngle() {
+            return getGyroAngleError(angle);
+        }
+    }
+
+    public void gyroDrive(double speed,
+                          double distance,
+                          final double angle) {
+        ErrorAngleCalculator errorAngleCalculator = new GyroErrorAngleCalculator(angle);
+
+        gyroDrive(speed, distance, errorAngleCalculator);
+    }
+
+
+    public void gyroDrive (double speed,
+                           double distance,
+                           ErrorAngleCalculator errorAngleCalculator) {
 
         int     newLeftTarget;
         int     newRightTarget;
@@ -357,7 +378,7 @@ public class HardwareTrig {
         double  rightSpeed;
 
         // Ensure that the opmode is still active
-        if (opMode.opModeIsActive()) {
+        if (opMode == null || opMode.opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
             moveCounts = (int)(distance * COUNTS_PER_INCH);
@@ -377,11 +398,11 @@ public class HardwareTrig {
             rightMotor.setPower(speed);
 
             // keep looping while we are still active, and BOTH motors are running.
-            while (opMode.opModeIsActive() &&
+            while ((opMode == null || opMode.opModeIsActive()) &&
                     (leftMotor.isBusy() && rightMotor.isBusy())) {
 
                 // adjust relative speed based on heading error.
-                error = getError(angle);
+                error = errorAngleCalculator.getErrorAngle();
                 steer = getSteer(error, P_DRIVE_COEFF);
 
                 // if driving in reverse, the motor correction also needs to be reversed
@@ -489,7 +510,7 @@ public class HardwareTrig {
         double rightSpeed;
 
         // determine turn power based on +/- error
-        error = getError(angle);
+        error = getGyroAngleError(angle);
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
@@ -521,7 +542,7 @@ public class HardwareTrig {
      * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
      *          +ve error means the robot should turn LEFT (CCW) to reduce error.
      */
-    public double getError(double targetAngle) {
+    public double getGyroAngleError(double targetAngle) {
 
         double robotError;
 

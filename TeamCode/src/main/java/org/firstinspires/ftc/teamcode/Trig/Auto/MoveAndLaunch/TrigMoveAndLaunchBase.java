@@ -44,14 +44,13 @@ public abstract class TrigMoveAndLaunchBase extends TrigAutoBase {
     public void executeMovements() {
         waitForDelay(); // call delay method, this class waits 0 sec, but may be overridden
 
-        //Drive forward 2ft
+        //Drive forward 42 inches.
 
-        encoderDrive(DRIVE_SPEED, 52.5, 52.5, 5.0);
+        robot.gyroDrive(DRIVE_SPEED, 45, 45);  // if this is changed, change the ramming accordingly.
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flickerFire();
         // load second ball:  turn sweep on, wait 5 sec, turn sweep off
-        sleep(500);
         robot.sweepMotor.setPower(.5);      // This is for the second ball
         sleep(2500);
         robot.sweepMotor.setPower(0);
@@ -62,12 +61,13 @@ public abstract class TrigMoveAndLaunchBase extends TrigAutoBase {
         sleep(500);
         // knock ball off center platform: drive forward 1/2 foot and park
         sleep(500);
-        encoderDrive(1.0, 18, 18, 4.0);  //ram
-        encoderDrive(1.0, -4, -4, 4.0);  //back up
+        encoderDrive(DRIVE_SPEED, 16, 16, 4.0);  //ram
+
+        encoderDrive(DRIVE_SPEED, -4, -4, 4.0);  //back up
 
         encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
 
-        turnToBall();
+       // turnToBall();
 
         encoderDrive(DRIVE_SPEED, 10, 10, 4);
 

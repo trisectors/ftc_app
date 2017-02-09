@@ -11,11 +11,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 //@Disabled
 public class TrigMoveCornerParkBlue extends TrigMoveCornerParkBase {
 
+    public void initializeTeam(){
+        initialAngle = 90;
+        cornerAngle = 145;
+    }
+
     public void waitForDelay() {}
 
-    public void turnToCorner() {
-        simpleGyroTurn(.3, 45);
-
-    }
 
 }
