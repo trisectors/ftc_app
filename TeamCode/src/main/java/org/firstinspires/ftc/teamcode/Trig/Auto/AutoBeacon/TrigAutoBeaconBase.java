@@ -32,12 +32,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig.Auto.AutoBeacon;
 
-import android.widget.ViewSwitcher;
-
-import com.qualcomm.hardware.ams.AMSColorSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.vuforia.Vuforia;
-
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -47,8 +41,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-import org.firstinspires.ftc.teamcode.Trig.Auto.CornerPark.TrigMoveCornerParkRed;
 import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 import org.firstinspires.ftc.teamcode.Trig.TrigAutoBase;
 
@@ -65,23 +57,23 @@ class NavParams {
 public abstract class TrigAutoBeaconBase extends TrigAutoBase {
     private static double MM_PER_INCH = 25.4;
 
-    VuforiaLocalizer vuforia;
-    VectorF trans;
-    Orientation rot;
-    VectorF[] targetPositions = {
+    protected VuforiaLocalizer vuforia;
+    protected VectorF trans;
+    protected Orientation rot;
+    protected VectorF[] targetPositions = {
             new VectorF(-1625f, -304.8f, 0.0f),
             new VectorF(-1625f, 914.4f, 0.0f)
     };
-    VuforiaTrackable[] trackables = new VuforiaTrackable[2];
+    protected VuforiaTrackable[] trackables = new VuforiaTrackable[2];
 
-    VectorF targetPosition = null;
-    double DRIVE_SPEED = 0.7;
-    double TURN_SPEED = 0.2;
-    OpenGLMatrix lastLocation = null;
+    protected VectorF targetPosition = null;
+    protected OpenGLMatrix lastLocation = null;
     protected boolean redTeam;
     protected int turnDirection;
     protected int farWallDirection;
     protected double initialAngle;
+
+    protected int beaconDistanceOffset = 0;  // how much do we need to compensate for the beacon distance?
 
 
     public void waitForDelay() {}
@@ -101,7 +93,7 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
             //telemetry.addData(trackable.getName(), listener.isVisible() ? "Visible" : "Not Visible");    //
 
             OpenGLMatrix robotLocationTransform = listener.getUpdatedRobotLocation();
-            listener.getRobotLocation();
+            // listener.getRobotLocation();
 
             if (robotLocationTransform != null) {
                 lastLocation = robotLocationTransform;
@@ -121,7 +113,7 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
             //telemetry.update();
             getVuforiaLocation(trackable);
             if (lastLocation == null) {
-                sleep(1000);
+                sleep(100);
             }
         } while ((opModeIsActive() && lastLocation == null));
 
@@ -166,7 +158,7 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
             //telemetry.update();
             getVuforiaLocation(trackable);
             if (lastLocation == null) {
-                sleep(1000);
+                sleep(100);
             }
         } while ((opModeIsActive() && lastLocation == null));
 
@@ -191,17 +183,18 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
 
 
 
-        telemetry.addData("bearing", "%5.3f", navParams.robotBearing);
+/*        telemetry.addData("bearing", "%5.3f", navParams.robotBearing);
         telemetry.addData("Pos: Curr/Targ", "%5.2f %5.2f / %5.2f %5.2f", currentPosition.get(0), currentPosition.get(1), targetPosition.get(0), targetPosition.get(1));
-        telemetry.addData("TargetVector(magnitude)", "%5.2f %5.2f (%5.2f)",
-                navParams.targetVector.get(0), navParams.targetVector.get(1), navParams.targetVector.magnitude());
+        //telemetry.addData("TargetVector(magnitude)", "%5.2f %5.2f (%5.2f)",
+        //        navParams.targetVector.get(0), navParams.targetVector.get(1), navParams.targetVector.magnitude());
         telemetry.addData("headingError (deg)", navParams.headingError);
         telemetry.addData("target Angle", navParams.targetBearingAngle);
-        telemetry.addData("HeadingVector", "%5.2f %5.2f", headingX, headingY);
-        telemetry.update();
+        //telemetry.addData("HeadingVector", "%5.2f %5.2f", headingX, headingY);
+        //telemetry.update();
+*/
 
 
-        //safety check, if these are NaN, just go straignt
+        //safety check, if these are NaN, just go straight
         if (Double.isNaN(navParams.targetBearingAngle))
             navParams.targetBearingAngle = 0.0;
         if (Double.isNaN(navParams.headingError))
@@ -216,8 +209,8 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
     private class VuforiaErrorAngleCalculator implements HardwareTrig.ErrorAngleCalculator
     {
         VectorF targetPos;
-        VuforiaTrackable trackable;
-        VuforiaErrorAngleCalculator(VectorF targetPos, VuforiaTrackable trackable) {
+            VuforiaTrackable trackable;
+             VuforiaErrorAngleCalculator(VectorF targetPos, VuforiaTrackable trackable) {
             this.targetPos = targetPos;
             this.trackable = trackable;
         }
@@ -234,12 +227,18 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
 
         NavParams np = getVizNavParams(targetPosition, trackable);
         VuforiaErrorAngleCalculator errorAngleCalculator = new VuforiaErrorAngleCalculator(targetPosition, trackable);
-        robot.gyroDrive(DRIVE_SPEED/2, np.targetVector.magnitude()/MM_PER_INCH, errorAngleCalculator);
+        robot.gyroDrive(DRIVE_SPEED/2, (np.targetVector.magnitude()/MM_PER_INCH)-beaconDistanceOffset, errorAngleCalculator);
 
         //Press beacon
         selectAndPressBeacon(redTeam);
     }
 
+
+    public void followTarget(VectorF targetPosition, VuforiaTrackable trackable) {
+        NavParams np = getVizNavParams(targetPosition, trackable);
+        VuforiaErrorAngleCalculator errorAngleCalculator = new VuforiaErrorAngleCalculator(targetPosition, trackable);
+        robot.gyroDrive(DRIVE_SPEED/2, 128, errorAngleCalculator);
+    }
 
     public void doTest() {
         while(opModeIsActive()) {
@@ -263,6 +262,11 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
         if (gamepad1.a) {
             doTest();
         }
+        if (gamepad1.b) {
+            followTarget(targetPositions[0], trackables[0]);
+            stop();
+        }
+
 
         // drive 55 inches to get  near beacon
         robot.gyroDrive(DRIVE_SPEED, 55, initialAngle);
@@ -274,13 +278,11 @@ public abstract class TrigAutoBeaconBase extends TrigAutoBase {
         //back up, turn and drive to second beacon position
         robot.gyroDrive(DRIVE_SPEED, -12, turnDirection);
         robot.gyroTurn(TURN_SPEED, farWallDirection);
-        robot.gyroDrive(DRIVE_SPEED, 48, farWallDirection);
+        robot.gyroDrive(DRIVE_SPEED, 51, farWallDirection);
         robot.gyroTurn(TURN_SPEED, turnDirection);
 
         // reset location and beacon pressers
         lastLocation = null;
-        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
-        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
 
         // steer directly into the current beacon and press the correct button
         doBeaconPress(targetPositions[1], trackables[1], redTeam);

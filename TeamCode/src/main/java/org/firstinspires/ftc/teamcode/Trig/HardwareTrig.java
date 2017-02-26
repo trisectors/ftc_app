@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.Trig;
 
-import android.hardware.Sensor;
+import android.transition.Slide;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -35,18 +34,19 @@ import java.util.List;
 public class HardwareTrig {
     public static final double LEFT_BEACON_DOWN = 1.0;    /* Public OpMode members. */
     public static final double LEFT_BEACON_UP = 0.0;
-    public static final double LEFT_BEACON_PARTIAL_DOWN = 0.2;
+    public static final double LEFT_BEACON_PARTIAL_DOWN = 0.3;
     public static final double RIGHT_BEACON_UP = 1.0;
     public static final double RIGHT_BEACON_DOWN = 0.0;
-    public static final double RIGHT_BEACON_PARTIAL_DOWN = 0.8;
+    public static final double RIGHT_BEACON_PARTIAL_DOWN = 0.7;
     public static final double COUNTS_PER_MOTOR_REV = 1440;
     public static final double DRIVE_GEAR_REDUCTION = 1;
     public static final double FLICKER_GEAR_REDUCTION = 2;
     public static final double COUNTS_PER_FLICKER_REVOLUTION = COUNTS_PER_MOTOR_REV / FLICKER_GEAR_REDUCTION;
     public static final double WHEEL_DIAMETER_INCHES = 4;
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    
+
+
     public final double flickerSpeed = 1.0;
     public final double reverseFlickerSpeed = -0.4;
     public final double manualReverseFlickerSpeed = -.05;
@@ -54,17 +54,20 @@ public class HardwareTrig {
     private final LinearOpMode opMode;
 
 
-    static final double     HEADING_THRESHOLD       = 1 ;      // As tight as we can make it with an integer gyro
-    static final double     P_TURN_COEFF            = 0.1;     // Larger is more responsive, but also less stable
-    static final double     P_DRIVE_COEFF           = 0.015;     // Larger is more responsive, but also less stable
+    public double HEADING_THRESHOLD = 1;      // As tight as we can make it with an integer gyro
+    public double P_TURN_COEFF = 0.1;     // Larger is more responsive, but also less stable
+    public double P_DRIVE_COEFF = 0.015;     // Larger is more responsive, but also less stable
 
-    public DcMotor leftMotor = null;
+    public DcMotor leftMotor  = null;
     public DcMotor rightMotor = null;
     public DcMotor sweepMotor = null;
-    public DcMotor flicker = null;
-    public Servo beaconLeft = null;
-    public Servo beaconRight = null;
-    public Servo gate = null;
+    public DcMotor flicker    = null;
+    public DcMotor rightSlide = null;
+    public DcMotor leftSlide  = null;
+    public Servo beaconLeft   = null;
+    public Servo beaconRight  = null;
+    public Servo cbrd         = null;
+    public Servo eye          = null;
     public ModernRoboticsI2cGyro gyro = null;
     public ColorSensor colorSensor = null;
     public ElapsedTime runtime = new ElapsedTime();   // used for encoderDrive's timeout
@@ -94,7 +97,10 @@ public class HardwareTrig {
         flicker = hwMap.dcMotor.get("flicker");
         beaconLeft = hwMap.servo.get("beaconLeft");
         beaconRight = hwMap.servo.get("beaconRight");
-        gate = hwMap.servo.get("gate");
+        rightSlide = hwMap.dcMotor.get("rightSlide");
+        leftSlide = hwMap.dcMotor.get("leftSlide");
+        cbrd = hwMap.servo.get("cbrd");
+        eye = hwMap.servo.get("eye");
         gyro = (ModernRoboticsI2cGyro) hwMap.gyroSensor.get("gyro");
         colorSensor = hwMap.colorSensor.get("sensor_color");
         colorSensor.enableLed(false);
@@ -109,9 +115,12 @@ public class HardwareTrig {
         rightMotor.setPower(0);
         sweepMotor.setPower(0);
         flicker.setPower(0);
-        gate.setPosition(0);
-        beaconLeft.setPosition(LEFT_BEACON_UP);
-        beaconRight.setPosition(RIGHT_BEACON_UP);
+        leftSlide.setPower(0);
+        rightSlide.setPower(0);
+        beaconLeft.setPosition(LEFT_BEACON_DOWN);
+        beaconRight.setPosition(RIGHT_BEACON_DOWN);
+        cbrd.setPosition(1.0);
+        eye.setPosition(1.0);
 
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
@@ -119,6 +128,9 @@ public class HardwareTrig {
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         sweepMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         flicker.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     /***
@@ -148,7 +160,7 @@ public class HardwareTrig {
 
     public void flickerFire() {
 
-        double timeoutS = 2.0;
+        double timeoutS = 1.0;
 
         int startPosition = flicker.getCurrentPosition();
 
@@ -326,7 +338,7 @@ public class HardwareTrig {
         FTC_2016.activate();
         return allTrackables;
     }
-    
+
 
     /**
      * A simple utility that extracts positioning information from a transformation matrix
@@ -337,13 +349,13 @@ public class HardwareTrig {
     }
 
 
-    public interface ErrorAngleCalculator
-    {
+    public interface ErrorAngleCalculator {
         public double getErrorAngle();
-    };
+    }
 
-    private class GyroErrorAngleCalculator implements ErrorAngleCalculator
-    {
+    ;
+
+    private class GyroErrorAngleCalculator implements ErrorAngleCalculator {
         double angle;
 
         GyroErrorAngleCalculator(double angle) {
@@ -355,33 +367,38 @@ public class HardwareTrig {
         }
     }
 
-    public void gyroDrive(double speed,
-                          double distance,
-                          final double angle) {
+    public void gyroDrive(double speed, double distance, final double angle) {
         ErrorAngleCalculator errorAngleCalculator = new GyroErrorAngleCalculator(angle);
 
         gyroDrive(speed, distance, errorAngleCalculator);
     }
 
+    public void gyroDriveTest(double speed, double distance, ErrorAngleCalculator errorAngleCalculator) {
+        while (opMode != null  && opMode.opModeIsActive()) {
+           double error = errorAngleCalculator.getErrorAngle();
+           double steer = getSteer(error, P_DRIVE_COEFF);
+            telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
+            telemetry.update();
+        }
+    }
 
-    public void gyroDrive (double speed,
-                           double distance,
-                           ErrorAngleCalculator errorAngleCalculator) {
+    public void gyroDrive(double speed, double distance, ErrorAngleCalculator errorAngleCalculator) {
 
-        int     newLeftTarget;
-        int     newRightTarget;
-        int     moveCounts;
-        double  max;
-        double  error;
-        double  steer;
-        double  leftSpeed;
-        double  rightSpeed;
+        int newLeftTarget;
+        int newRightTarget;
+        int moveCounts;
+        double max;
+        double error;
+        double steer;
+        double leftSpeed;
+        double rightSpeed;
+        double inSpeed = speed;
 
         // Ensure that the opmode is still active
         if (opMode == null || opMode.opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            moveCounts = (int)(distance * COUNTS_PER_INCH);
+            moveCounts = (int) (distance * COUNTS_PER_INCH);
             newLeftTarget = leftMotor.getCurrentPosition() + moveCounts;
             newRightTarget = rightMotor.getCurrentPosition() + moveCounts;
 
@@ -397,15 +414,29 @@ public class HardwareTrig {
             leftMotor.setPower(speed);
             rightMotor.setPower(speed);
 
+            double brd = (moveCounts * .8) + rightMotor.getCurrentPosition();
+
+
             // keep looping while we are still active, and BOTH motors are running.
             while ((opMode == null || opMode.opModeIsActive()) &&
                     (leftMotor.isBusy() && rightMotor.isBusy())) {
+
+
+                // This is the code to implement a slowdown as we approach the target position
+                double f = ((rightMotor.getCurrentPosition() - brd) / (newRightTarget - brd));
+                if (rightMotor.getCurrentPosition() >= brd){
+                double fracLeft = (1-f);
+                speed = ((inSpeed - .2) * fracLeft + .2);
+                }
+
 
                 // adjust relative speed based on heading error.
                 error = errorAngleCalculator.getErrorAngle();
                 steer = getSteer(error, P_DRIVE_COEFF);
 
                 // if driving in reverse, the motor correction also needs to be reversed
+
+
                 if (distance < 0)
                     steer *= -1.0;
 
@@ -414,8 +445,7 @@ public class HardwareTrig {
 
                 // Normalize speeds if any one exceeds +/- 1.0
                 max = Math.max(Math.abs(leftSpeed), Math.abs(rightSpeed));
-                if (max > 1.0)
-                {
+                if (max > 1.0) {
                     leftSpeed /= max;
                     rightSpeed /= max;
                 }
@@ -424,39 +454,38 @@ public class HardwareTrig {
                 rightMotor.setPower(rightSpeed);
 
                 // Display drive status for the driver.
-                telemetry.addData("Err/St",  "%5.1f/%5.1f",  error, steer);
-                telemetry.addData("Target",  "%7d:%7d",      newLeftTarget,  newRightTarget);
-                telemetry.addData("Actual",  "%7d:%7d",      leftMotor.getCurrentPosition(),
+                telemetry.addData("Err/St", "%5.1f/%5.1f", error, steer);
+                telemetry.addData("Target", "%7d:%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Actual", "%7d:%7d", leftMotor.getCurrentPosition(),
                         rightMotor.getCurrentPosition());
-                telemetry.addData("Speed",   "%5.2f:%5.2f",  leftSpeed, rightSpeed);
+                telemetry.addData("Speed", "%5.2f:%5.2f", leftSpeed, rightSpeed);
                 telemetry.update();
             }
 
             // Stop all motion;
-            leftMotor.setPower(0);
             rightMotor.setPower(0);
+            leftMotor.setPower(0);
 
             // Turn off RUN_TO_POSITION
             leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
-        
-        
-        
-        
+
     }
+
+
     /**
-     *  Method to spin on central axis to point in a new direction.
-     *  Move will stop if either of these conditions occur:
-     *  1) Move gets to the heading (angle)
-     *  2) Driver stops the opmode running.
+     * Method to spin on central axis to point in a new direction.
+     * Move will stop if either of these conditions occur:
+     * 1) Move gets to the heading (angle)
+     * 2) Driver stops the opmode running.
      *
      * @param speed Desired speed of turn.
-     * @param angle      Absolute Angle (in Degrees) relative to last gyro reset.
-     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                   If a relative angle is required, add/subtract from current heading.
+     * @param angle Absolute Angle (in Degrees) relative to last gyro reset.
+     *              0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *              If a relative angle is required, add/subtract from current heading.
      */
-    public void gyroTurn (  double speed, double angle) {
+    public void gyroTurn(double speed, double angle) {
 
         // keep looping while we are still active, and not on heading.
         while (opMode.opModeIsActive() && !onHeading(speed, angle, P_TURN_COEFF)) {
@@ -466,16 +495,16 @@ public class HardwareTrig {
     }
 
     /**
-     *  Method to obtain & hold a heading for a finite amount of time
-     *  Move will stop once the requested time has elapsed
+     * Method to obtain & hold a heading for a finite amount of time
+     * Move will stop once the requested time has elapsed
      *
-     * @param speed      Desired speed of turn.
-     * @param angle      Absolute Angle (in Degrees) relative to last gyro reset.
-     *                   0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                   If a relative angle is required, add/subtract from current heading.
-     * @param holdTime   Length of time (in seconds) to hold the specified heading.
+     * @param speed    Desired speed of turn.
+     * @param angle    Absolute Angle (in Degrees) relative to last gyro reset.
+     *                 0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *                 If a relative angle is required, add/subtract from current heading.
+     * @param holdTime Length of time (in seconds) to hold the specified heading.
      */
-    public void gyroHold( double speed, double angle, double holdTime) {
+    public void gyroHold(double speed, double angle, double holdTime) {
 
         ElapsedTime holdTimer = new ElapsedTime();
 
@@ -495,17 +524,17 @@ public class HardwareTrig {
     /**
      * Perform one cycle of closed loop heading control.
      *
-     * @param speed     Desired speed of turn.
-     * @param angle     Absolute Angle (in Degrees) relative to last gyro reset.
-     *                  0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
-     *                  If a relative angle is required, add/subtract from current heading.
-     * @param PCoeff    Proportional Gain coefficient
+     * @param speed  Desired speed of turn.
+     * @param angle  Absolute Angle (in Degrees) relative to last gyro reset.
+     *               0 = fwd. +ve is CCW from fwd. -ve is CW from forward.
+     *               If a relative angle is required, add/subtract from current heading.
+     * @param PCoeff Proportional Gain coefficient
      * @return
      */
     boolean onHeading(double speed, double angle, double PCoeff) {
-        double   error ;
-        double   steer ;
-        boolean  onTarget = false ;
+        double error;
+        double steer;
+        boolean onTarget = false;
         double leftSpeed;
         double rightSpeed;
 
@@ -514,14 +543,13 @@ public class HardwareTrig {
 
         if (Math.abs(error) <= HEADING_THRESHOLD) {
             steer = 0.0;
-            leftSpeed  = 0.0;
+            leftSpeed = 0.0;
             rightSpeed = 0.0;
             onTarget = true;
-        }
-        else {
+        } else {
             steer = getSteer(error, PCoeff);
-            rightSpeed  = speed * steer;
-            leftSpeed   = -rightSpeed;
+            rightSpeed = speed * steer;
+            leftSpeed = -rightSpeed;
         }
 
         // Send desired speeds to motors.
@@ -538,9 +566,10 @@ public class HardwareTrig {
 
     /**
      * getError determines the error between the target angle and the robot's current heading
-     * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
-     * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
-     *          +ve error means the robot should turn LEFT (CCW) to reduce error.
+     *
+     * @param targetAngle Desired angle (relative to global reference established at last Gyro Reset).
+     * @return error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     * +ve error means the robot should turn LEFT (CCW) to reduce error.
      */
     public double getGyroAngleError(double targetAngle) {
 
@@ -548,15 +577,44 @@ public class HardwareTrig {
 
         // calculate error in -179 to +180 range  (
         robotError = targetAngle - gyro.getIntegratedZValue();
-        while (robotError > 180)  robotError -= 360;
+        while (robotError > 180) robotError -= 360;
         while (robotError <= -180) robotError += 360;
         return robotError;
+    }
+    public  void hammerBeacon (Servo servo, double down, double up){
+        for (int i= 0; i<3; i++){
+            servo.setPosition(down);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+            servo.setPosition(up);
+
+        }
+    }
+    public void hammerBoth (){
+        int delay = 100;
+
+        for (int i= 0; i<3; i++){
+            beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
+            waitForTick(delay);
+            beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+            waitForTick(delay);
+            beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+            waitForTick(delay);
+            beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
+            waitForTick(delay);
+
+        }
+        beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+        beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
     }
 
     /**
      * returns desired steering force.  +/- 1 range.  +ve = steer left
-     * @param error   Error angle in robot relative degrees
-     * @param PCoeff  Proportional Gain Coefficient
+     *
+     * @param error  Error angle in robot relative degrees
+     * @param PCoeff Proportional Gain Coefficient
      * @return
      */
     public double getSteer(double error, double PCoeff) {

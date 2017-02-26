@@ -27,6 +27,8 @@ public class TrigAutoBeaconRed extends TrigAutoBeaconBase {
         trackables[0] = allTrackables.get(3);
         trackables[1] = allTrackables.get(1);
         initialAngle = 30;
+        telemetry.addData("Say", "turn robot straight. Press init. Turn the robot 30 Deg.");
+
     }
 
 }

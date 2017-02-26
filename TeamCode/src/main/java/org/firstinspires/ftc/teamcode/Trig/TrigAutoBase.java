@@ -32,10 +32,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode.Trig;
 
-import android.text.InputFilter;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
@@ -57,7 +56,21 @@ public abstract class TrigAutoBase extends LinearOpMode {
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
     protected float DRIVE_SPEED = .7f;
+    protected float ORIGINAL_DRIVE_SPEED = .4f;
+    protected float TURN_SPEED = 0.2f;
+
     // Change everything related to DRIVE_SPEED. Preferably change DRIVE_SPEED to 1.0.
+
+    protected boolean dpadUpPressed        = false;
+    protected boolean dpadDownPressed      = false;
+    protected boolean dpadRightPressed     = false;
+    protected boolean dpadLeftPressed      = false;
+    protected boolean leftBumperPressed = false;
+    protected boolean rightBumperPressed = false;
+    protected boolean aPressed = false;
+    protected boolean yPressed = false;
+
+
 
     protected List<VuforiaTrackable> allTrackables;
 
@@ -65,6 +78,7 @@ public abstract class TrigAutoBase extends LinearOpMode {
     public abstract void waitForDelay();
     public abstract void executeMovements();
 
+    protected boolean useEncoderDrive = false;
 
     @Override
     public void runOpMode() {
@@ -73,10 +87,9 @@ public abstract class TrigAutoBase extends LinearOpMode {
         // Send telemetry message to signify robot waiting;
         telemetry.addData("Status", "Resetting Encoders");
         telemetry.update();
-
+        robot.eye.setPosition(0.0);
         robot.beaconLeft.setPosition(robot.LEFT_BEACON_DOWN);
         robot.beaconRight.setPosition(robot.RIGHT_BEACON_DOWN);
-
         // reset encoders
         robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -87,7 +100,11 @@ public abstract class TrigAutoBase extends LinearOpMode {
         // make sure the gyro is calibrated before continuing
         robot.gyro.calibrate();
         while (!isStopRequested() && robot.gyro.isCalibrating()) {
-            sleep(50);
+            if (gamepad1.x) {
+                useEncoderDrive = true;
+                break;
+            }
+            sleep(100);
             idle();
         }
 
@@ -97,22 +114,99 @@ public abstract class TrigAutoBase extends LinearOpMode {
 
         // Wait for the game to start (Display Gyro value), and reset gyro before we move..
         while (!isStarted()) {
+
+
+            if (gamepad1.dpad_up && !dpadUpPressed) {
+                dpadUpPressed = true;
+                DRIVE_SPEED = DRIVE_SPEED + 0.05f;
+            }
+            if (!gamepad1.dpad_up) {
+                dpadUpPressed = false;
+            }
+
+
+            if (gamepad1.dpad_down && !dpadDownPressed) {
+                dpadDownPressed = true;
+                DRIVE_SPEED = DRIVE_SPEED - 0.05f;
+            }
+            if (!gamepad1.dpad_down) {
+                dpadDownPressed = false;
+            }
+
+            if (gamepad1.y && !yPressed) {
+                yPressed = true;
+                TURN_SPEED = TURN_SPEED + 0.02f;
+            }
+            if (!gamepad1.y) {
+                yPressed = false;
+            }
+
+
+            if (gamepad1.a && !aPressed) {
+                aPressed = true;
+                TURN_SPEED = TURN_SPEED - 0.02f;
+            }
+            if (!gamepad1.a) {
+                aPressed = false;
+            }
+
+
+
+            if (gamepad1.dpad_right && !dpadRightPressed) {
+                dpadRightPressed = true;
+                robot.P_DRIVE_COEFF = robot.P_DRIVE_COEFF + 0.001f;
+            }
+            if (!gamepad1.dpad_right) {
+                dpadRightPressed = false;
+            }
+
+            if (gamepad1.dpad_left && !dpadLeftPressed) {
+                dpadLeftPressed = true;
+                robot.P_DRIVE_COEFF = robot.P_DRIVE_COEFF - 0.001f;
+            }
+            if (!gamepad1.dpad_left) {
+                dpadLeftPressed = false;
+            }
+
+
+            if (gamepad1.left_bumper && !leftBumperPressed) {
+                leftBumperPressed = true;
+                robot.P_TURN_COEFF = robot.P_TURN_COEFF - 0.01f;
+            }
+            if (!gamepad1.left_bumper) {
+                leftBumperPressed = false;
+            }
+
+            if (gamepad1.right_bumper && !rightBumperPressed) {
+                rightBumperPressed = true;
+                robot.P_TURN_COEFF = robot.P_TURN_COEFF + 0.01f;
+            }
+            if (!gamepad1.right_bumper) {
+                rightBumperPressed = false;
+            }
+
             telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
+            telemetry.addData("DRIVE_SPEED", DRIVE_SPEED);
+            telemetry.addData("TURN_SPEED", TURN_SPEED);
+            telemetry.addData("P_DRIVE_COEFF", robot.P_DRIVE_COEFF);
+            telemetry.addData("P_TURN_COEFF", robot.P_TURN_COEFF);
+
             telemetry.update();
             idle();
         }
+        robot.beaconLeft.setPosition(robot.LEFT_BEACON_UP);
+        robot.beaconRight.setPosition(robot.RIGHT_BEACON_UP);
         executeMovements();
     }
 
 
     public void simpleGyroTurn(double speed, double angle) {
 
-        robot.gyro.resetZAxisIntegrator();
 
         telemetry.addData(">", "Robot Heading = %d", robot.gyro.getIntegratedZValue());
         telemetry.update();
 
-        if (angle > 0) {
+        if (angle > robot.gyro.getIntegratedZValue()) {
             robot.leftMotor.setPower(-1.0 * speed);
             robot.rightMotor.setPower(speed);
 
@@ -199,40 +293,46 @@ public abstract class TrigAutoBase extends LinearOpMode {
     public void selectAndPressBeacon(boolean redTeam) {
            final double     TURN_SPEED              = 0.4;     // Nominal half speed for better accuracy.
 
+            int dist = 12;
         if (robot.colorSensor.red() > robot.colorSensor.blue()) {
+            robot.eye.setPosition(0.0);
             if (redTeam) {
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 8 , 8, 5.0);
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
+                encoderDrive(TURN_SPEED, dist , dist, 5.0);
+                robot.hammerBeacon(robot.beaconLeft, HardwareTrig.LEFT_BEACON_PARTIAL_DOWN, HardwareTrig.LEFT_BEACON_UP);
             } else {
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 8, 8, 5.0);
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
+                encoderDrive(TURN_SPEED, dist, dist, 5.0);
+                robot.hammerBeacon(robot.beaconRight, HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN, HardwareTrig.RIGHT_BEACON_UP);
             }
-        } else {  // we see blue
+        } else {// we see blue
+            robot.eye.setPosition(0.0);
+
             if (!redTeam) {
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 8, 8, 5.0);
-                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_PARTIAL_DOWN);
+                encoderDrive(TURN_SPEED, dist, dist, 5.0);
+                robot.hammerBeacon(robot.beaconLeft, HardwareTrig.LEFT_BEACON_PARTIAL_DOWN, HardwareTrig.LEFT_BEACON_UP);
+
             } else {
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+                robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
                 sleep(250);
-                encoderDrive(TURN_SPEED, 8, 8, 5.0);
-                robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN);
+                encoderDrive(TURN_SPEED, dist, dist, 5.0);
+                robot.hammerBeacon(robot.beaconRight, HardwareTrig.RIGHT_BEACON_PARTIAL_DOWN, HardwareTrig.RIGHT_BEACON_UP);
 
             }
         }
+
 
         telemetry.addData("Red  ", robot.colorSensor.red());
         telemetry.addData("blue  ", robot.colorSensor.blue());
         telemetry.update();
 
         encoderDrive(DRIVE_SPEED, -4, -4, 5);
-        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
-        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
+        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
 
     }
 }

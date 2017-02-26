@@ -380,6 +380,7 @@ public class ConceptVuforiaNavigation extends LinearOpMode {
                 float robotX = trans.get(0);
                 float robotY = trans.get(1);
 
+
                 // Robot bearing (in Cartesian system) position is defined by the standard Matrix z rotation
                 float robotBearing = rot.thirdAngle * 360.0f / (2.0f * (float) Math.PI);
 

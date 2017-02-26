@@ -46,30 +46,29 @@ public abstract class TrigMoveAndLaunchBase extends TrigAutoBase {
 
         //Drive forward 42 inches.
 
-        robot.gyroDrive(DRIVE_SPEED, 45, 45);  // if this is changed, change the ramming accordingly.
+        encoderDrive(ORIGINAL_DRIVE_SPEED, 45, 45, 6);
 
         // fire first particle: turn flicker on to 100, wait half second, turn flicker off
         robot.flickerFire();
-        // load second ball:  turn sweep on, wait 5 sec, turn sweep off
-        robot.sweepMotor.setPower(.5);      // This is for the second ball
-        sleep(2500);
+        // load second ball:  turn boot on, wait 5 sec, turn boot down
+        robot.sweepMotor.setPower(.4);
+        sleep(3000);
         robot.sweepMotor.setPower(0);
         sleep(500);
-
         // fire second particle: wait half sec, turn flicker on, wait half second, turn flicker off
         robot.flickerFire();
-        sleep(500);
+        robot.beaconLeft.setPosition(1.0);
+        robot.beaconRight.setPosition(0);
         // knock ball off center platform: drive forward 1/2 foot and park
-        sleep(500);
-        encoderDrive(DRIVE_SPEED, 16, 16, 4.0);  //ram
+        encoderDrive(ORIGINAL_DRIVE_SPEED, 16, 16, 4.0);  //ram
 
-        encoderDrive(DRIVE_SPEED, -4, -4, 4.0);  //back up
+        encoderDrive(ORIGINAL_DRIVE_SPEED, -6, -6, 4.0);  //back up
 
-        encoderDrive(DRIVE_SPEED, 4, 4, 4.0); // go forward again
+        encoderDrive(.8, 6, 6, 4.0); // go forward again
 
        // turnToBall();
 
-        encoderDrive(DRIVE_SPEED, 10, 10, 4);
+        encoderDrive(.8, 10, 10, 4);
 
 
         telemetry.addData("Path", "Complete");

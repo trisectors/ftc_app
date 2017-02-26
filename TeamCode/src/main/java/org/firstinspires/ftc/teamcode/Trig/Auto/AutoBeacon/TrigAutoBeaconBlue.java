@@ -28,6 +28,9 @@ public class TrigAutoBeaconBlue extends TrigAutoBeaconBase {
         trackables[0] = allTrackables.get(0);
         trackables[1] = allTrackables.get(2);
         initialAngle = 60;
+        beaconDistanceOffset = 1; // we were getting 1 inch too close to the blue beacons.
+        telemetry.addData("Say","Turn flicker side to the corner vortex. press init. Then turn the robot 60 deg.");
     }
+
 
 }

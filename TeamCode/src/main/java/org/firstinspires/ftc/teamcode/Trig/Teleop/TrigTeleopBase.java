@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.Trig.Teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.vuforia.EyewearDevice;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -11,36 +12,37 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.teamcode.Trig.Auto.AutoBeacon.TrigAutoBeaconBase;
 import org.firstinspires.ftc.teamcode.Trig.HardwareTrig;
 
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class TrigTeleopBase extends OpMode {
 
     HardwareTrig robot = new HardwareTrig(telemetry, null);
-    double sweepSpeed = 0.0;                   // initial sweep speed
+    double sweepSpeed = 0.0;  // initial sweep speed
     final double SWEEP_SPEED_OFFSET = 0.001;   // amount to change sweep speed when changing it with trigger buttons
-    final double DRIVE_SPEED = 1.0;
+    double cbrdPos = 1.0;
+    final double CBRD_POS_OFFSET = 0.01;
+    double DRIVE_SPEED = 1.0;
+    final double STANDARD_DRIVE_SPEED = 1.0;
 
-    final double LEFT_BEACON_UP = 0;
-    final double RIGHT_BEACON_UP = 1.0;
-    final double RIGHT_BEACON_DOWN = 0;
-    final double LEFT_BEACON_DOWN = 1;
-
-
-    boolean beaconLeftDown = true;
-    boolean beaconRightDown = true;
-    boolean beaconLeftEnabled = true;
-    boolean beaconRightEnabled = true;
+    boolean hammerBothEnabled = true;
     private boolean firing = false;
 
-    protected List<VuforiaTrackable> allTrackables;
+    protected List<VuforiaTrackable> allTrackables = new ArrayList<>();
     protected OpenGLMatrix lastLocation;
     protected VectorF trans;
     protected Orientation rot;
     protected boolean pressingBeacon;
+
+
+    @Override
+    protected void preInit() {
+        msStuckDetectInit = 7500;
+        super.preInit();
+    }
 
 
     // use the vizualization targets to determine the robot's location, if possible.  This will set lastLocation.
@@ -66,13 +68,16 @@ public abstract class TrigTeleopBase extends OpMode {
         }
     }
 
+
     public boolean getLocation() {
         lastLocation = null;
 
         getVuforiaLocation();
+        telemetry.addData("Got location:", lastLocation != null);
+        telemetry.update();
         if (lastLocation == null)
             return false;
-            return  true;
+        return  true;
 
     }
 
@@ -91,7 +96,10 @@ public abstract class TrigTeleopBase extends OpMode {
             float robotX = trans.get(0);
             float robotY = trans.get(1);
             // Robot bearing (in Cartesian system) position is defined by the standard Matrix z rotation
-            return -rot.thirdAngle * 360.0f / (2.0f * (float) Math.PI);
+            double err= -rot.thirdAngle * 360.0f / (2.0f * (float) Math.PI);
+            telemetry.addData("vuforia error:",err);
+            telemetry.update();
+            return err;
         }
     }
 
@@ -108,12 +116,12 @@ public abstract class TrigTeleopBase extends OpMode {
     public void init() {
         robot.init(hardwareMap);
         allTrackables =  robot.initializeTrackables();
-
-        robot.beaconRight.setPosition(RIGHT_BEACON_UP);
-        robot.beaconLeft.setPosition(LEFT_BEACON_UP);
+        robot.eye.setPosition(0.0);
+        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_DOWN);
+        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_DOWN);
 
         // Send telemetry message to signify robot waiting;
-        telemetry.addData("Say", "Good luck Driver!", "TRISECTORS RULE");
+        telemetry.addData("Say", "Good luck Driver! TRISECTORS RULE! May the Force be with you! You are one with the force. The force is with you! Help us Trisector you're our only hope!  GOOD LUCK! :)  ");
     }
 
     public abstract void steer();
@@ -124,12 +132,37 @@ public abstract class TrigTeleopBase extends OpMode {
     @Override
     public void loop() {
 
+        robot.beaconRight.setPosition(HardwareTrig.RIGHT_BEACON_UP);
+        robot.beaconLeft.setPosition(HardwareTrig.LEFT_BEACON_UP);
+
         // call abstract method to handle steering
         steer();
 
+        // control Cap ball retention device
+        if (gamepad2.y) {
+            cbrdPos = 0.0;
+        } else if (gamepad2.x) {
+            cbrdPos = 1.0;
+        } else {
+            if(gamepad2.b)
+                cbrdPos -= CBRD_POS_OFFSET;
+            else if (gamepad2.a)
+                cbrdPos += CBRD_POS_OFFSET;
+            cbrdPos = Range.clip(cbrdPos, 0.0, 1.0);
+        }
+        robot.cbrd.setPosition(cbrdPos);
+
+        // enable half speed for better control
+        if (gamepad2.dpad_up) {
+            DRIVE_SPEED = STANDARD_DRIVE_SPEED;
+        }
+        if (gamepad2.dpad_down) {
+            DRIVE_SPEED = STANDARD_DRIVE_SPEED / 2;
+        }
+
 
         // Use gamepad left & right Bumpers and x to adjust sweep speed
-        if (gamepad1.right_bumper)
+      if (gamepad1.right_bumper)
             sweepSpeed += SWEEP_SPEED_OFFSET;
         else if (gamepad1.left_bumper)
             sweepSpeed -= SWEEP_SPEED_OFFSET;
@@ -171,37 +204,52 @@ public abstract class TrigTeleopBase extends OpMode {
 
 
         // beaconLeft Control with dpad_left
-        if (beaconLeftEnabled && gamepad1.dpad_left) {
-            beaconLeftEnabled = false;
-            if (beaconLeftDown) {
-                beaconLeftDown = false;
-                robot.beaconLeft.setPosition(LEFT_BEACON_UP);
-            } else {
-                beaconLeftDown = true;
-                robot.beaconLeft.setPosition(LEFT_BEACON_DOWN);
-            }
-        } else if (!gamepad1.dpad_left) {
-            beaconLeftEnabled = true;
+        if (hammerBothEnabled && gamepad1.dpad_down) {
+            hammerBothEnabled = false;
+            robot.hammerBoth();
+
+        } else if (!gamepad1.dpad_down) {
+            hammerBothEnabled = true;
         }
 
 
-        // beaconRight Control with dpad_right
-        if (beaconRightEnabled && gamepad1.dpad_right) {
-            beaconRightEnabled = false;
-            if (beaconRightDown) {
-                beaconRightDown = false;
-                robot.beaconRight.setPosition(RIGHT_BEACON_DOWN);
-            } else {
-                beaconRightDown = true;
-                robot.beaconRight.setPosition(RIGHT_BEACON_UP);
-            }
-        } else if (!gamepad1.dpad_right) {
-            beaconRightEnabled = true;
+
+        if(gamepad2.right_trigger > 0) {
+            robot.rightSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            robot.rightSlide.setPower(-0.1);
         }
+        else if(gamepad2.right_bumper){
+            robot.rightSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            robot.rightSlide.setPower(1.0);
+        }
+        else {
+            robot.rightSlide.setPower(0.0);
+        }
+
+
+        if(gamepad2.left_trigger > 0) {
+            robot.leftSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+           robot.leftSlide.setPower(-0.1);
+        }
+        else if(gamepad2.left_bumper){
+            robot.leftSlide.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            robot.leftSlide.setPower(1.0);
+        }
+        else {
+            robot.leftSlide.setPower(0.0);
+        }
+
+
+
+
 
         telemetry.addData("sweepSpeed", "Offset = %.2f", sweepSpeed);
+        telemetry.addData("cbrdPos", "Offset = %.2f", cbrdPos);
         telemetry.update();
     }
+
+
+
 
     /*
      * Code to run ONCE after the driver hits STOP
@@ -209,5 +257,4 @@ public abstract class TrigTeleopBase extends OpMode {
     @Override
     public void stop() {
     }
-
 }
